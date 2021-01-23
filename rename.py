@@ -1,4 +1,4 @@
-import os
+import os, sys
 from exifread import *
 
 # Windowsでファイル名に使用できない文字
@@ -10,7 +10,12 @@ REPLACE_CHAR_FOR_CUSTOM_FILENAME = {' ': '-',}  # ファイル名に空白を非
 
 # リネームを実行
 def rename(old_name, new_name):
-    os.rename(old_name, new_name)
+    try:
+        os.rename(old_name, new_name)
+        print('[', old_name, '] was renamed to [', new_name, ']')
+    except exception as e:
+        print('error:', e)
+        sys.exit()
 
 
 # fname文字列から使用不可能な文字を除去 (パスが渡されることは想定していない)
@@ -56,7 +61,7 @@ def rename_by_exif_tag(fpath_list, tag_id):
 
         new_name += '.' + fpath.split('.')[-1]    # 拡張子を追加
 
-        # ディレクトリの親パスを設定
+        # ディレクトリの親パスを含めて設定
         new_name = os.path.join(os.path.dirname(fpath), new_name)
 
         # リネームテーブルの更新
@@ -67,7 +72,8 @@ def rename_by_exif_tag(fpath_list, tag_id):
     ren_preview(ren_table)
 
     # リネームの実行
-    # rename(old_name, new_name)
+    for old_name, new_name in ren_table.items():
+        rename(old_name, new_name)
 
 
 # リネームのプレビューを出力

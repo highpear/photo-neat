@@ -5,19 +5,18 @@ from classify import *
 from exifread import *
 from rename import *
 
-# 処理を行うディレクトリ カレントを指定
-DIR = './'
-TEST_IMG = 'JPG/pix.jpg'
 
-
+# パスから画像をオープン
 def im_open(fpath):
     try:
         im = Image.open(fpath)
         return im
     except exception as e:
-        print('error: ', e)
+        print('error:', e)
         sys.exit()
 
+
+# dir以下の指定拡張子のファイルパスをリストで取得
 def get_all_files(dir, TARGET_EXT=[]):
     # 抽出したパスを格納するリスト
     fpath_list = []
@@ -43,11 +42,25 @@ def get_all_files(dir, TARGET_EXT=[]):
 
 def main():
 
+    # 写真をコピーする基底ディレクトリを指定
+    SRC_DIR = './Original'
+
+    # コピー先のディレクトリを指定
+    DEST_DIR = './classified'
+
+    # SRC_DIR以下をOriginal以下にコピー
+
+
+    # 対象とする画像ファイル形式を指定 (小文字)
     TARGET_EXT = ['jpg', 'jpeg', 'png']
-    fpath_list = get_all_files('./Original', TARGET_EXT)
+
+    # 条件に一致する全画像ファイルのパスをリストで取得
+    fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
+
+
 
     # 拡張子でフォルダ分け (コピー)
-    # cls_by_ext(fpath_list, './classified/')
+    # cls_by_ext(fpath_list, DEST_DIR)
 
     # exif情報でフォルダ分け (ムーブ)
     # cls_by_exif_tag(get_all_files('./classified/JPG', TARGET_EXT), './classified/JPG', 272)
