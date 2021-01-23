@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, collections
 from exifread import *
 
 # Windowsでファイル名に使用できない文字
@@ -68,16 +68,46 @@ def rename_by_exif_tag(fpath_list, tag_id):
         old_name = fpath
         ren_table[old_name] = new_name
 
+    # リネームテーブルのバリデーション (リネームの前に必ず実行)
+    ren_valid(ren_table)
+
     # リネームのプレビューを出力
     ren_preview(ren_table)
 
+    # リネームの実行を確認
+    print('execute renaming ? (yes or no) >>')
+    ans = input()
+
     # リネームの実行
-    for old_name, new_name in ren_table.items():
-        rename(old_name, new_name)
+    if(ans == 'yes'):
+        for old_name, new_name in ren_table.items():
+            rename(old_name, new_name)
 
 
 # リネームのプレビューを出力
 def ren_preview(ren_table):
     for old_name, new_name in ren_table.items():
         print('[', old_name, '] -> [', new_name, ']')
+
+
+# リネーム後の名前を検証
+def ren_valid(ren_table):
+
+    # 重複した際に連番を付ける
+    result = collections.Counter(ren_table.values())  # 重複したnew_nameをカウント
+    for new_name, cnt in result.items():
+        if cnt > 1:                                   # 重複したnew_nameのみファイル名変更を行う
+            i = 0;                                    # 重複枚数のカウント
+            for k, v in ren_table.items():
+                if v == new_name:                                           # 重複したnew_nameの時は末尾に連番を付与
+                    base_name = os.path.basename(new_name).split('.')[0]    # 拡張子を除いたファイル名を取得
+                    ext = '.' + new_name.split('.')[-1]                     # 拡張子を取得
+                    parent_dir = os.path.dirname(new_name)                  # 親ディレクトリのパスを取得
+                    fpath = os.path.join(parent_dir, base_name + '-' + str(i).zfill(4) + ext)  # 4桁ゼロ埋めの連番を付与
+                    ren_table[k] = fpath  
+                    i += 1;
+
+
+
+            
 
