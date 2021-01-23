@@ -1,5 +1,5 @@
 import os
-from exif import *
+from exifread import *
 
 # Windowsでファイル名に使用できない文字
 NA_CHAR_FOR_FILENAME = ['\\', '/', '*', '?' ,'"', '<', '>', '|', ':']
@@ -35,34 +35,43 @@ def validate_fname(fname):
 
 
 # 指定のidに対応するexif情報でリネームを実行
-def rename_by_exif_tag(fpath, tag_id):
+def rename_by_exif_tag(fpath_list, tag_id):
 
-    new_name = get_exif(fpath).get(tag_id)   # idに対応するexif情報を取得
-    
-    if not new_name:                         # exif情報が存在しない時
-        new_name = 'Unknown'
-    else:
-        new_name = validate_fname(new_name)  # ファイル名のバリデーションを実行 
+    file_num = len(fpath_list)
+    ren_table = {}                      # リネームテーブル {"old name": "new name", ...} これに従いリネームを実行
+    uk_cnt = 0;                          # exif情報不明画像のカウント
+    uk_digits = 4                        # デフォルトは4桁でゼロ埋め
+    if(uk_digits < len(str(file_num))):
+        uk_digits = len(str(file_num))
 
-    '''
-      変更点
-      fpath_listを引数に変更
-      Unknownの際に連番を生成する
-      リネームのプレビューを表示して，実行を標準入力から受け付ける
-    '''
-
-    if new_name is None:
-        new_name = 'UNKNOWN.' + fpath.split('.')[-1]
-    else:
-        new_name += '.' + fpath.split('.')[-1]
-
-    rename(fpath, new_name)
-
- 
-def rename_all_by_exif_tag(fpath_list, tag_id):  # バリデーション済みの画像のパスのリスト
     for fpath in fpath_list:
-        rename_by_exif_tag(fpath, tag_id)
 
-def preview_rename():
-    pass
+        new_name = get_exif(fpath).get(tag_id)   # idに対応するexif情報を取得
+
+        if not new_name:                                          # exif情報が存在しない時
+            uk_cnt += 1                                           # exif情報不明の画像をカウント
+            new_name = 'Unknown-' + str(uk_cnt).zfill(uk_digits)  # 連番を用いてファイル名を生成
+        else:
+            new_name = validate_fname(new_name)  # ファイル名のバリデーションを実行
+
+        new_name += '.' + fpath.split('.')[-1]    # 拡張子を追加
+
+        # ディレクトリの親パスを設定
+        new_name = os.path.join(os.path.dirname(fpath), new_name)
+
+        # リネームテーブルの更新
+        old_name = fpath
+        ren_table[old_name] = new_name
+
+    # リネームのプレビューを出力
+    ren_preview(ren_table)
+
+    # リネームの実行
+    # rename(old_name, new_name)
+
+
+# リネームのプレビューを出力
+def ren_preview(ren_table):
+    for old_name, new_name in ren_table.items():
+        print('[', old_name, '] -> [', new_name, ']')
 

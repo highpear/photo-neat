@@ -1,5 +1,5 @@
 import os, shutil
-from exif import *
+from exifread import *
 from PIL.ExifTags import TAGS
 
 

@@ -1,7 +1,6 @@
 from PIL import Image
 from PIL.ExifTags import TAGS
 
-from main import im_open
 
 # 対応するEXIF情報を定義
 COMPAT＿EXIF＿TABLE = {272: 'Device', }
@@ -14,8 +13,12 @@ def get_TAGS_info_by_id(id):
 
 # exifを取得
 def get_exif(fpath):
-    im = im_open(fpath)
-    return im._getexif()
+    try:
+        im = Image.open(fpath)
+        return im._getexif()
+    except exception as e:
+        print('error: ', e)
+        sys.exit()
 
 
 # idに対応する指定ファイルのexif情報を取得
