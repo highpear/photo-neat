@@ -1,5 +1,5 @@
 from PIL import Image
-import sys, os, glob
+import sys, os, glob, shutil
 
 from classify import *
 from exifread import *
@@ -40,16 +40,26 @@ def get_all_files(dir, TARGET_EXT=[]):
     return fpath_list
 
 
+# リスト内のファイルを全て指定のフォルダ以下にコピーする
+def copy_all_files(fpath_list, dest_dir):
+    cnt = 0
+    for fpath in fpath_list:
+        base_name = os.path.basename(fpath)
+        dest_path = os.path.join(dest_dir, base_name)
+        print(dest_path)
+        shutil.copy2(fpath, dest_path)
+        cnt += 1
+
+    print('{} files were copied to [ {} ]'.format(cnt, dest_dir))
+
+
 def main():
 
     # 写真をコピーする基底ディレクトリを指定
-    SRC_DIR = './Original'
+    SRC_DIR = '.'
 
     # コピー先のディレクトリを指定
-    DEST_DIR = './classified'
-
-    # SRC_DIR以下をOriginal以下にコピー
-
+    DEST_DIR = './Original'
 
     # 対象とする画像ファイル形式を指定 (小文字)
     TARGET_EXT = ['jpg', 'jpeg', 'png']
@@ -57,6 +67,8 @@ def main():
     # 条件に一致する全画像ファイルのパスをリストで取得
     fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
 
+    # SRC_DIR以下をOriginal以下にコピー
+    # copy_all_files(fpath_list, DEST_DIR)
 
 
     # 拡張子でフォルダ分け (コピー)
