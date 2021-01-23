@@ -27,6 +27,13 @@ def replace_for_custom_fname(fname):
     return fname
 
 
+# 使用禁止文字の検証や文字の置換をまとめて行う
+def validate_fname(fname):
+    fname = remove_na_char(fname)
+    fname = replace_for_custom_fname(fname)
+    return fname
+
+
 # 指定のidに対応するexif情報でリネームを実行
 def rename_by_exif_tag(fpath, tag_id):
 
@@ -35,8 +42,7 @@ def rename_by_exif_tag(fpath, tag_id):
     if not new_name:                         # exif情報が存在しない時
         new_name = 'Unknown'
     else:
-        new_name = remove_na_char(new_name)  # 使用不可能な文字を除去
-        new_name = replace_for_custom_fname(new_name)  # 指定文字の置き換えを実行
+        new_name = validate_fname(new_name)  # ファイル名のバリデーションを実行 
 
     '''
       変更点
