@@ -69,24 +69,26 @@ def copy_all_files(fpath_list, dest_dir):
 
     print('{} files were copied to [ {} ]'.format(cnt, dest_dir))
 
+    return dest_dir
+
 
 def main():
 
     # 写真をコピーする基底ディレクトリを指定
-    SRC_DIR = '.'
+    SRC_DIR = './TestImg'
 
     # コピー先のディレクトリを指定
     DEST_DIR = './Original'
 
     # 対象とする画像ファイル形式を指定 (小文字)
-    TARGET_EXT = ['jpg', 'jpeg', 'png']
+    TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']
 
     # 条件に一致する全画像ファイルのパスをリストで取得
     fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
 
     # SRC_DIR以下をOriginal以下にコピー
-    copy_all_files(fpath_list, DEST_DIR)
-
+    copied_dir = copy_all_files(fpath_list, DEST_DIR)
+    print(copied_dir)
 
     # 拡張子でフォルダ分け (コピー)
     # cls_by_ext(fpath_list, DEST_DIR)
