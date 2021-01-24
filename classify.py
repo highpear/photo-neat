@@ -1,5 +1,5 @@
 import os, shutil
-from exifread import *
+from exifio import *
 from PIL.ExifTags import TAGS
 
 
@@ -20,22 +20,23 @@ def cls_by_ext(fpath_list, dest_dir):
         shutil.copy2(fpath, dest_path)            # コピーを実行
 
 
-# リストで渡された全ファイルをtag_idに対応するexifタグごとにフォルダ分けする (ムーブ)
-def cls_by_exif_tag(fpath_list, dest_dir, tag_id):
+# リストで渡された全ファイルをexif情報ごとにフォルダ分けする (ムーブ)
+def cls_by_exif(fpath_list, dest_dir, exif_name):
 
     for fpath in fpath_list:
-        tag_name = get_exif(fpath).get(tag_id)  # tag_idからタグ情報を取得
+        tags = get_exif(fpath)
+        tag_val = get_val_from_tags(tags, exif_name)       # タグ情報を取得
 
-        if not tag_name:                        # 対応するexif情報なし
-            tag_name = 'Unknown'
+        if not tag_val:                                    # 対応するexif情報なし
+            tag_val = 'Unknown'
 
-        tag_name_dir = os.path.join(dest_dir, tag_name)  # タグ情報をディレクトリ名とする
+        tag_val_dir = os.path.join(dest_dir, str(tag_val))   # タグ情報をディレクトリ名とする
         
-        if not os.path.exists(tag_name_dir):             # タグ情報のフォルダが存在しなければ新規作成
-            os.mkdir(tag_name_dir)
-            print('new directory [', tag_name_dir, '] was created')
+        if not os.path.exists(tag_val_dir):             # タグ情報のフォルダが存在しなければ新規作成
+            os.mkdir(tag_val_dir)
+            print('new directory [', tag_val_dir, '] was created')
 
         fname = fpath.split('/')[-1]                     # パスからファイル名のみ取得
-        dest_path = os.path.join(tag_name_dir, fname)    # ムーブ先のパスを生成 
+        dest_path = os.path.join(tag_val_dir, fname)     # ムーブ先のパスを生成 
        
         shutil.move(fpath, dest_path)                    # ムーブを実行

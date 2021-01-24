@@ -2,18 +2,42 @@ from PIL import Image
 import sys, os, glob, shutil, datetime
 
 from classify import *
-from exifread import *
+from exifio import *
 from rename import *
 
 
 # パスから画像をオープン
 def im_open(fpath):
+    # 画像形式を判定
+    ext = fpath.split('.')[-1].lower()
+    
+    if ext not in COMPAT_EXT:
+        print('error: uncompatible file type [', ext, ']')
+        sys.exit()
+
     try:
-        im = Image.open(fpath)
-        return im
+        if ext == 'heic':
+            return read_heif(fpath)
+        else:                       # Pillowで読み込む
+            return Image.open(fpath)
+
     except exception as e:
         print('error:', e)
         sys.exit()
+
+
+# heic形式の画像を読み込む
+def read_heif(fpath):
+    im_heif = pyheif.read(fpath)
+    im = Image.frombytes(
+        im_heif.mode,
+        im_heif.size, 
+        im_heif.data,
+        "raw",
+        im_heif.mode,
+        im_heif.stride,
+        )
+    return im
 
 
 # dir以下の指定拡張子のファイルパスをリストで取得
@@ -41,7 +65,7 @@ def get_all_files(dir, TARGET_EXT=[]):
 
 
 # リスト内のファイルを全て指定のフォルダ以下の現在時刻フォルダへコピーする
-def copy_all_files(fpath_list, dest_dir):
+def copy_all(fpath_list, dest_dir):
 
     # dest_dir以下に現在時刻でフォルダを生成する
     dt_now = str(datetime.datetime.now())        # 現在時刻を取得
@@ -75,7 +99,7 @@ def copy_all_files(fpath_list, dest_dir):
 def main():
 
     # 写真をコピーする基底ディレクトリを指定
-    SRC_DIR = './TestImg'
+    SRC_DIR = './TestImg'  # 通常はデバイスのDCIM等を参照
 
     # コピー先のディレクトリを指定
     DEST_DIR = './Original'
@@ -87,24 +111,26 @@ def main():
     fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
 
     # SRC_DIR以下をOriginal以下にコピー
-    copied_dir = copy_all_files(fpath_list, DEST_DIR)
+    copied_dir = copy_all(fpath_list, DEST_DIR)
     print(copied_dir)
 
-    # 拡張子でフォルダ分け (コピー)
-    # cls_by_ext(fpath_list, DEST_DIR)
+    # コピーされた全ファイルを取得
+    copied = get_all_files(copied_dir, TARGET_EXT)
+    for fpath in copied:
+        # show_details_by_exif(fpath)  # EXIFを表示
+        pass
+
+    # 拡張子でフォルダ分け (コピー)   fix: JPG JPEGが違うフォルダになる
+    # cls_by_ext(copied, copied_dir)
 
     # exif情報でフォルダ分け (ムーブ)
-    # cls_by_exif_tag(get_all_files('./classified/JPG', TARGET_EXT), './classified/JPG', 272)
-
-    # exif情報が同じか判定
-    # print(has_same_exif('./20210108-130337.jpg', './20210108-195647.jpg'))
+    cls_by_exif(copied, copied_dir, 'Model')
 
     # 撮影日時でリネーム
-    # rename_by_exif_tag(fpath_list, 36867)  # DatetimeOriginal
+    moved = get_all_files(copied_dir, TARGET_EXT)
+    rename_by_exif(moved, 'DateTimeOriginal')
 
 
-
-    # print(len(TAGS.keys())) # 260
     print('finished at main()')
 
 
