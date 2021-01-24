@@ -1,5 +1,5 @@
 from PIL import Image
-import sys, os, glob, shutil
+import sys, os, glob, shutil, datetime
 
 from classify import *
 from exifread import *
@@ -40,8 +40,25 @@ def get_all_files(dir, TARGET_EXT=[]):
     return fpath_list
 
 
-# リスト内のファイルを全て指定のフォルダ以下にコピーする
+# リスト内のファイルを全て指定のフォルダ以下の現在時刻フォルダへコピーする
 def copy_all_files(fpath_list, dest_dir):
+
+    # dest_dir以下に現在時刻でフォルダを生成する
+    dt_now = str(datetime.datetime.now())        # 現在時刻を取得
+    dt_now = dt_now.split('.')[0]                # 小数点以下の秒を除去
+
+    dir_name = dt_now.replace(' ', '-')          # フォルダ名を生成
+    dir_name = dir_name.replace(':', '')         # コロンを除去
+    dest_dir = os.path.join(dest_dir, dir_name)  # パスを生成
+
+    if os.path.exists(dest_dir):                 # 生成するフォルダが既に存在するかチェック
+        print('error: directory [', dest_dir, '] is already exists')
+        sys.exit()
+    else:
+        os.mkdir(dest_dir)                       # フォルダを新規作成
+        print('directory [', dest_dir ,'] was created')
+
+    # コピーを実行
     cnt = 0
     for fpath in fpath_list:
         base_name = os.path.basename(fpath)
@@ -68,7 +85,7 @@ def main():
     fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
 
     # SRC_DIR以下をOriginal以下にコピー
-    # copy_all_files(fpath_list, DEST_DIR)
+    copy_all_files(fpath_list, DEST_DIR)
 
 
     # 拡張子でフォルダ分け (コピー)
@@ -81,7 +98,7 @@ def main():
     # print(has_same_exif('./20210108-130337.jpg', './20210108-195647.jpg'))
 
     # 撮影日時でリネーム
-    rename_by_exif_tag(fpath_list, 36867)  # DatetimeOriginal
+    # rename_by_exif_tag(fpath_list, 36867)  # DatetimeOriginal
 
 
 
