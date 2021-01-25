@@ -111,24 +111,23 @@ def main():
     fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
 
     # SRC_DIR以下をOriginal以下にコピー
-    copied_dir = copy_all(fpath_list, DEST_DIR)
-    print(copied_dir)
+    now_copied_dir = copy_all(fpath_list, DEST_DIR)
 
     # コピーされた全ファイルを取得
-    copied = get_all_files(copied_dir, TARGET_EXT)
-    for fpath in copied:
-        # show_details_by_exif(fpath)  # EXIFを表示
-        pass
+    copied_fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
 
     # 拡張子でフォルダ分け (コピー)   fix: JPG JPEGが違うフォルダになる
-    # cls_by_ext(copied, copied_dir)
+    # cls_by_ext(copied_fpath_list, now_copied_dir)
 
     # exif情報でフォルダ分け (ムーブ)
-    cls_by_exif(copied, copied_dir, 'Model')
+    cls_by_exif(copied_fpath_list, now_copied_dir, 'Model', move=False)
 
     # 撮影日時でリネーム
-    moved = get_all_files(copied_dir, TARGET_EXT)
-    rename_by_exif(moved, 'DateTimeOriginal')
+    # fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
+    # ren_table = make_ren_table(fpath_list, tag_name='DateTimeOriginal')
+    # ren_preview(ren_table)
+    # rename_by_table(ren_table)
+
 
 
     print('finished at main()')

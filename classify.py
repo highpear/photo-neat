@@ -3,8 +3,8 @@ from exifio import *
 from PIL.ExifTags import TAGS
 
 
-# リストで渡された全ファイルをdest_dir以下に拡張子毎に分類する (コピー)
-def cls_by_ext(fpath_list, dest_dir):
+# リストで渡された全ファイルをdest_dir以下に拡張子毎に分類する (デフォルトでムーブ)
+def cls_by_ext(fpath_list, dest_dir, move=True):
 
     for fpath in fpath_list:
         ext = fpath.split('.')[-1].upper()     # 拡張子を大文字で取得 
@@ -15,13 +15,16 @@ def cls_by_ext(fpath_list, dest_dir):
             print('new directory [', ext_dir, '] was created')
 
         fname = fpath.split('/')[-1]              # パスからファイル名のみ取得
-        dest_path = os.path.join(ext_dir, fname)  # コピー先のパスを生成
+        dest_path = os.path.join(ext_dir, fname)  # ムーブ先のパスを生成
 
-        shutil.copy2(fpath, dest_path)            # コピーを実行
+        if move:
+            shutil.move(fpath, dest_path)                # ムーブを実行
+        else:                             
+            shutil.copy2(fpath, dest_path)               # コピーを実行
 
 
-# リストで渡された全ファイルをexif情報ごとにフォルダ分けする (ムーブ)
-def cls_by_exif(fpath_list, dest_dir, exif_name):
+# リストで渡された全ファイルをexif情報ごとにフォルダ分けする (デフォルトでムーブ)
+def cls_by_exif(fpath_list, dest_dir, exif_name, move=True):
 
     for fpath in fpath_list:
         tags = get_exif(fpath)
@@ -37,6 +40,9 @@ def cls_by_exif(fpath_list, dest_dir, exif_name):
             print('new directory [', tag_val_dir, '] was created')
 
         fname = fpath.split('/')[-1]                     # パスからファイル名のみ取得
-        dest_path = os.path.join(tag_val_dir, fname)     # ムーブ先のパスを生成 
+        dest_path = os.path.join(tag_val_dir, fname)     # ムーブ先のパスを生成
        
-        shutil.move(fpath, dest_path)                    # ムーブを実行
+        if move:
+            shutil.move(fpath, dest_path)                # ムーブを実行
+        else:                             
+            shutil.copy2(fpath, dest_path)               # コピーを実行

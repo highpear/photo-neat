@@ -5,7 +5,7 @@ from exifio import *
 NA_CHAR_FOR_FILENAME = ['\\', '/', '*', '?' ,'"', '<', '>', '|', ':']
 
 # リネーム時に置換する文字の対応テーブル
-REPLACE_CHAR_FOR_CUSTOM_FILENAME = {' ': '_',}  # ファイル名に空白を非推奨
+REPLACE_CHAR_FOR_CUSTOM_FILENAME = {' ': '-',}  # ファイル名に空白を非推奨
 
 
 # リネームを実行
@@ -49,22 +49,22 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
     dirpath = os.path.dirname(fpath)  # 親ディレクトリのパス
 
     # モードに応じてリネーム後のファイル名を生成
-    if mode == 'REPLACEALL':  # 旧ファイル名を全て置き換える (exif)
+    if ren_mode[0] == 'REPLACEALL':  # 旧ファイル名を全て置き換える (exif)
         fname = ren_mode[1]
-    elif mode == 'REPLACE':   # 旧ファイルの文字列を置き換える (exif)
+    elif ren_mode[0] == 'REPLACE':   # 旧ファイルの文字列を置き換える (exif)
         fname = fname.replace(ren_mode[1], ren_mode[2])
-    elif mode == 'ADDHEAD':   # 旧ファイル名の先頭に追加 (exif)
+    elif ren_mode[0] == 'ADDHEAD':   # 旧ファイル名の先頭に追加 (exif)
         fname = ren_mode[1] + fname
-    elif mode == 'ADDTAIL':   # 旧ファイル名の末尾に追加 (exif)
+    elif ren_mode[0] == 'ADDTAIL':   # 旧ファイル名の末尾に追加 (exif)
         fname += ren_mode[1]
-    elif mode == 'REMOVE':    # 旧ファイル名から文字列を除く
+    elif ren_mode[0] == 'REMOVE':    # 旧ファイル名から文字列を除く
         fname = fname.replace(ren_mode[1], '')
-    elif mode == 'EXTLOWER':  # 拡張子を小文字に変更
+    elif ren_mode[0] == 'EXTLOWER':  # 拡張子を小文字に変更
         ext = ext.lower()
-    elif mode == 'EXTUPPER':  # 拡張子を大文字に変更
+    elif ren_mode[0] == 'EXTUPPER':  # 拡張子を大文字に変更
         ext = ext.upper()
     else:
-        print('error: unmatched MDOE [', mode, ']')
+        print('error: unmatched MDOE [', ren_mode[0], ']')
         sys.exit()
 
     # 新ファイル名のバリデーション
@@ -78,12 +78,12 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
 
 
 #リネームテーブルを作成する
-def make_ren_table(fpath_list, ren_mode=['REPLACEALL',], tag_name=None):
+def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None):
 
     ren_table = {}
 
     # リネームにexifタグを用いる場合
-    if not tag_name:
+    if tag_name:
         uk_cnt = 0                       # exif情報不明画像のカウント
         uk_digits = 4                    # デフォルトは4桁でゼロ埋め
         uk_fname = 'Unknown-'            # 不明画像に用いる規定のファイル名
@@ -92,11 +92,13 @@ def make_ren_table(fpath_list, ren_mode=['REPLACEALL',], tag_name=None):
             tags = get_exif(fpath)
             tag_val = get_val_from_tags(tags, tag_name)              # 対応するexif情報を取得
             new_fname = str(tag_val)
-            if new_fname is 'None':                                  # exif情報なし
+            if new_fname == 'None':                                  # exif情報なし
                 uk_cnt += 1                                          # exif情報不明の画像をカウント
                 new_fname = uk_fname + str(uk_cnt).zfill(uk_digits)  # 連番を用いてファイル名を生成
+            
+            ren_mode[1] = new_fname
             # モードに応じてリネーム後のパスを生成
-            fpath_renamed = get_renamed_fpath(fpath, tuple(ren_mode.append(new_fname))
+            fpath_renamed = get_renamed_fpath(fpath, ren_mode=tuple(ren_mode))
             # テーブルに追加
             ren_table[fpath] = fpath_renamed
 
@@ -119,7 +121,17 @@ def make_ren_table(fpath_list, ren_mode=['REPLACEALL',], tag_name=None):
 
 
 # リネームテーブルからリネームを実行   
-def rename_by_table(ren_table):
+def rename_by_table(ren_table, confirm=True):
+    if confirm:
+        print('execute renaming ? (yes or no) >>')
+        ans = input()
+        if(ans == 'yes'):
+            pass
+        else:
+            print('canceled renaming')
+            return
+
+    # リネームを実行
     for old_name, new_name in ren_table.items():
             rename(old_name, new_name)
 
