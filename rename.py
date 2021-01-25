@@ -39,7 +39,7 @@ def validate_fname(fname):
     return fname
 
 
-# fpathをリネームしてリネーム後のパスを返す (親ディレクトリは変更しない)
+# fpathをリネームしてリネーム後のパスを返す (親ディレクトリは変更しない, exifを読む処理は行わない)
 def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
 
     bname = os.path.basename(fpath)   # 拡張子含む
@@ -49,13 +49,13 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
     dirpath = os.path.dirname(fpath)  # 親ディレクトリのパス
 
     # モードに応じてリネーム後のファイル名を生成
-    if mode == 'REPLACEALL':  # 旧ファイル名を全て置き換える
+    if mode == 'REPLACEALL':  # 旧ファイル名を全て置き換える (exif)
         fname = ren_mode[1]
-    elif mode == 'REPLACE':   # 旧ファイルの文字列を置き換える
+    elif mode == 'REPLACE':   # 旧ファイルの文字列を置き換える (exif)
         fname = fname.replace(ren_mode[1], ren_mode[2])
-    elif mode == 'ADDHEAD':   # 旧ファイル名の先頭に追加
+    elif mode == 'ADDHEAD':   # 旧ファイル名の先頭に追加 (exif)
         fname = ren_mode[1] + fname
-    elif mode == 'ADDTAIL':   # 旧ファイル名の末尾に追加
+    elif mode == 'ADDTAIL':   # 旧ファイル名の末尾に追加 (exif)
         fname += ren_mode[1]
     elif mode == 'REMOVE':    # 旧ファイル名から文字列を除く
         fname = fname.replace(ren_mode[1], '')
@@ -77,54 +77,50 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
     return fpath_renamed
 
 
-# 指定のidに対応するexif情報でリネームを実行
-def rename_by_exif(fpath_list, exif_name):
+#リネームテーブルを作成する
+def make_ren_table(fpath_list, ren_mode=['REPLACEALL',], tag_name=None):
 
-    file_num = len(fpath_list)
-    ren_table = {}                       # リネームテーブル {"old name": "new name", ...} これに従いリネームを実行
-    uk_cnt = 0;                          # exif情報不明画像のカウント
-    uk_digits = 4                        # デフォルトは4桁でゼロ埋め
-    if(uk_digits < len(str(file_num))):
-        uk_digits = len(str(file_num))
+    ren_table = {}
 
-    for fpath in fpath_list:
+    # リネームにexifタグを用いる場合
+    if not tag_name:
+        uk_cnt = 0                       # exif情報不明画像のカウント
+        uk_digits = 4                    # デフォルトは4桁でゼロ埋め
+        uk_fname = 'Unknown-'            # 不明画像に用いる規定のファイル名
 
-        tags = get_exif(fpath)
-        new_name = get_val_from_tags(tags, exif_name)             # 対応するexif情報を取得
+        for fpath in fpath_list:
+            tags = get_exif(fpath)
+            tag_val = get_val_from_tags(tags, tag_name)              # 対応するexif情報を取得
+            new_fname = str(tag_val)
+            if new_fname is 'None':                                  # exif情報なし
+                uk_cnt += 1                                          # exif情報不明の画像をカウント
+                new_fname = uk_fname + str(uk_cnt).zfill(uk_digits)  # 連番を用いてファイル名を生成
+            # モードに応じてリネーム後のパスを生成
+            fpath_renamed = get_renamed_fpath(fpath, tuple(ren_mode.append(new_fname))
+            # テーブルに追加
+            ren_table[fpath] = fpath_renamed
 
-        # exif_nameに応じて分岐
+    # 任意の文字列を用いてリネームを行う場合
+    else:
+        for fpath in fpath_list:
+            fpath_renamed = get_renamed_fpath(fpath, tuple(ren_mode))
+            #テーブルに追加
+            ren_table[fpath] = fpath_renamed
 
-
-
-        if not new_name:                                          # exif情報が存在しない時
-            uk_cnt += 1                                           # exif情報不明の画像をカウント
-            new_name = 'Unknown-' + str(uk_cnt).zfill(uk_digits)  # 連番を用いてファイル名を生成
-        else:
-            new_name = str(new_name)
-            new_name = validate_fname(new_name)  # ファイル名のバリデーションを実行
-
-        new_name += '.' + fpath.split('.')[-1]    # 拡張子を追加
-
-        # ディレクトリの親パスを含めて設定
-        new_name = os.path.join(os.path.dirname(fpath), new_name)
-
-        # リネームテーブルの更新
-        old_name = fpath
-        ren_table[old_name] = new_name
-
-    # リネームテーブルのバリデーション (リネームの前に必ず実行)
-    ren_valid(ren_table)
+    # リネームテーブルのバリデーション (重複チェック，リネームの前に必ず実行)
+    validate_ren_table(ren_table)
 
     # リネームのプレビューを出力
     ren_preview(ren_table)
 
-    # リネームの実行を確認
-    print('execute renaming ? (yes or no) >>')
-    ans = input()
+    print('rename table was created by make_ren_table()')
 
-    # リネームの実行
-    if(ans == 'yes'):
-        for old_name, new_name in ren_table.items():
+    return ren_table 
+
+
+# リネームテーブルからリネームを実行   
+def rename_by_table(ren_table):
+    for old_name, new_name in ren_table.items():
             rename(old_name, new_name)
 
 
@@ -132,10 +128,11 @@ def rename_by_exif(fpath_list, exif_name):
 def ren_preview(ren_table):
     for old_name, new_name in ren_table.items():
         print('[', old_name, '] -> [', new_name, ']')
+    print(len(ren_table), 'files were selected for renaming')
 
 
 # リネーム後の名前を検証
-def ren_valid(ren_table):
+def validate_ren_table(ren_table):
 
     # 重複した際に連番を付ける
     result = collections.Counter(ren_table.values())  # 重複したnew_nameをカウント
