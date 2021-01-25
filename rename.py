@@ -5,7 +5,7 @@ from exifio import *
 NA_CHAR_FOR_FILENAME = ['\\', '/', '*', '?' ,'"', '<', '>', '|', ':']
 
 # リネーム時に置換する文字の対応テーブル
-REPLACE_CHAR_FOR_CUSTOM_FILENAME = {' ': '-',}  # ファイル名に空白を非推奨
+REPLACE_CHAR_FOR_CUSTOM_FILENAME = {' ': '_',}  # ファイル名に空白を非推奨
 
 
 # リネームを実行
@@ -39,6 +39,44 @@ def validate_fname(fname):
     return fname
 
 
+# fpathをリネームしてリネーム後のパスを返す (親ディレクトリは変更しない)
+def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
+
+    bname = os.path.basename(fpath)   # 拡張子含む
+
+    fname = bname.split('.')[0]       # 拡張子含まないファイル名
+    ext = bname.split('.')[-1]        # ピリオド含まない拡張子
+    dirpath = os.path.dirname(fpath)  # 親ディレクトリのパス
+
+    # モードに応じてリネーム後のファイル名を生成
+    if mode == 'REPLACEALL':  # 旧ファイル名を全て置き換える
+        fname = ren_mode[1]
+    elif mode == 'REPLACE':   # 旧ファイルの文字列を置き換える
+        fname = fname.replace(ren_mode[1], ren_mode[2])
+    elif mode == 'ADDHEAD':   # 旧ファイル名の先頭に追加
+        fname = ren_mode[1] + fname
+    elif mode == 'ADDTAIL':   # 旧ファイル名の末尾に追加
+        fname += ren_mode[1]
+    elif mode == 'REMOVE':    # 旧ファイル名から文字列を除く
+        fname = fname.replace(ren_mode[1], '')
+    elif mode == 'EXTLOWER':  # 拡張子を小文字に変更
+        ext = ext.lower()
+    elif mode == 'EXTUPPER':  # 拡張子を大文字に変更
+        ext = ext.upper()
+    else:
+        print('error: unmatched MDOE [', mode, ']')
+        sys.exit()
+
+    # 新ファイル名のバリデーション
+    fname = validate_fname(fname)
+
+    # リネーム後のファイルパスの生成
+    fname = fname + '.' + ext 
+    fpath_renamed = os.path.join(dirpath, fname)
+
+    return fpath_renamed
+
+
 # 指定のidに対応するexif情報でリネームを実行
 def rename_by_exif(fpath_list, exif_name):
 
@@ -52,7 +90,11 @@ def rename_by_exif(fpath_list, exif_name):
     for fpath in fpath_list:
 
         tags = get_exif(fpath)
-        new_name = get_val_from_tags(tags, exif_name)            # 対応するexif情報を取得
+        new_name = get_val_from_tags(tags, exif_name)             # 対応するexif情報を取得
+
+        # exif_nameに応じて分岐
+
+
 
         if not new_name:                                          # exif情報が存在しない時
             uk_cnt += 1                                           # exif情報不明の画像をカウント
