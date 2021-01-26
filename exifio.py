@@ -5,9 +5,6 @@ from PIL.ExifTags import TAGS
 import exifread
 import pyheif
 
-# 対応するEXIF情報を定義
-COMPAT＿EXIF＿TABLE = {272: 'Device', }
-
 # 対応する画像形式を定義
 COMPAT_EXT = ('jpg', 'jpeg', 'png', 'tiff', 'heic')
 
@@ -26,7 +23,7 @@ def get_exif(fpath):
 # exifの略称から対応する値を取得
 def get_val_from_tags(tags, name):
     for k, v in tags.items():
-        if name in k:
+        if name == k:
             return v
     return None
 

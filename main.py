@@ -121,11 +121,11 @@ def main():
     # cls_by_ext(copied_fpath_list, now_copied_dir)
 
     # exif情報でフォルダ分け (ムーブ)
-    cls_by_exif(copied_fpath_list, now_copied_dir, 'Model')
+    cls_by_exif(copied_fpath_list, now_copied_dir, 'Image Model')
 
     # 撮影日時でリネーム
     fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
-    ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Yねん%mがつ%dにち%Hじ%Mふん%S秒')
+    ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d_%H%M%S')
     rename_by_table(ren_table)
 
 
