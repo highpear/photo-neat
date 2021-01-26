@@ -1,6 +1,8 @@
 Original/
 classified/
+TestImg/
 *.jpg
+*.jpeg
 *.png
 *.heic
 *.mov

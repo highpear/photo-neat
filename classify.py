@@ -4,10 +4,15 @@ from PIL.ExifTags import TAGS
 
 
 # リストで渡された全ファイルをdest_dir以下に拡張子毎に分類する (デフォルトでムーブ)
-def cls_by_ext(fpath_list, dest_dir, move=True):
+def cls_by_ext(fpath_list, dest_dir, move=True, jpeg2jpg=True):
 
     for fpath in fpath_list:
-        ext = fpath.split('.')[-1].upper()     # 拡張子を大文字で取得 
+        ext = fpath.split('.')[-1].upper()     # 拡張子を大文字で取得
+
+        if jpeg2jpg:  # JPGとJPEGを統一する
+            if ext == 'JPEG':
+                ext = 'JPG'
+
         ext_dir = os.path.join(dest_dir, ext)  # 各拡張子でフォルダを作成
 
         if not os.path.exists(ext_dir):        # 拡張子のフォルダが存在しなければ新規作成
