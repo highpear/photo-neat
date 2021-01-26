@@ -12,7 +12,7 @@ COMPAT＿EXIF＿TABLE = {272: 'Device', }
 COMPAT_EXT = ('jpg', 'jpeg', 'png', 'tiff', 'heic')
 
 
-# idに対応するexifの名称を取得
+# idに対応するexifの名称を取得 (Pillow)
 def get_TAGS_info_by_id(id):
     return TAGS.get(id)
 
@@ -37,11 +37,11 @@ def show_details_by_exif(fpath):
     exif = get_exif(fpath)    
     for k, v in exif.items():
         print(k, ':', v)
-    # print(len(exif.keys()), 'values were extructed from EXIF')
+    print(len(exif.keys()), 'values were extructed from EXIF')
 
 
 # 同一のexif情報を持つか判定
 def has_same_exif(fpath1, fpath2):
-    exif1 = get_exif(fpath1)
-    exif2 = get_exif(fpath2)
-    return exif1 == exif2
+    tags1 = get_exif(fpath1)
+    tags2 = get_exif(fpath2)
+    return tags1 == tags2

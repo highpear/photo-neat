@@ -76,19 +76,20 @@ def copy_all(fpath_list, dest_dir):
     dest_dir = os.path.join(dest_dir, dir_name)  # パスを生成
 
     if os.path.exists(dest_dir):                 # 生成するフォルダが既に存在するかチェック
-        print('error: directory [', dest_dir, '] is already exists')
+        print('ERROR : directory [', dest_dir, '] already exists')
         sys.exit()
     else:
         os.mkdir(dest_dir)                       # フォルダを新規作成
-        print('directory [', dest_dir ,'] was created')
+        print('DIR_CREATED : new directory [', dest_dir, '] was created')
+
 
     # コピーを実行
     cnt = 0
     for fpath in fpath_list:
         base_name = os.path.basename(fpath)
         dest_path = os.path.join(dest_dir, base_name)
-        print(dest_path)
         shutil.copy2(fpath, dest_path)
+        print('FILE_COPIED : file [', fpath, '] was copied to [', dest_path, ']')
         cnt += 1
 
     print('{} files were copied to [ {} ]'.format(cnt, dest_dir))
@@ -120,14 +121,13 @@ def main():
     # cls_by_ext(copied_fpath_list, now_copied_dir)
 
     # exif情報でフォルダ分け (ムーブ)
-    cls_by_exif(copied_fpath_list, now_copied_dir, 'Model', move=False)
+    cls_by_exif(copied_fpath_list, now_copied_dir, 'Model')
 
     # 撮影日時でリネーム
-    # fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
-    # ren_table = make_ren_table(fpath_list, tag_name='DateTimeOriginal')
-    # ren_preview(ren_table)
-    # rename_by_table(ren_table)
-
+    fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
+    ren_table = make_ren_table(fpath_list, tag_name='DateTimeOriginal')
+    ren_preview(ren_table)
+    rename_by_table(ren_table)
 
 
     print('finished at main()')

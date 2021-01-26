@@ -12,9 +12,10 @@ REPLACE_CHAR_FOR_CUSTOM_FILENAME = {' ': '-',}  # ファイル名に空白を非
 def rename(old_name, new_name):
     try:
         os.rename(old_name, new_name)
-        print('[', old_name, '] was renamed to [', new_name, ']')
+        print('FILE_RENAMED : file [', old_name, '] was renamed to [', new_name, ']')
     except exception as e:
-        print('error:', e)
+        print(e)
+        print(old_name, 'was not renamed at rename()')
         sys.exit()
 
 
@@ -64,7 +65,7 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
     elif ren_mode[0] == 'EXTUPPER':  # 拡張子を大文字に変更
         ext = ext.upper()
     else:
-        print('error: unmatched MDOE [', ren_mode[0], ']')
+        print('ERROR: unmatched MDOE [', ren_mode[0], ']')
         sys.exit()
 
     # 新ファイル名のバリデーション
@@ -78,7 +79,7 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
 
 
 #リネームテーブルを作成する
-def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None):
+def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None, preview=True):
 
     ren_table = {}
 
@@ -113,15 +114,16 @@ def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None):
     validate_ren_table(ren_table)
 
     # リネームのプレビューを出力
-    ren_preview(ren_table)
+    if preview:
+        ren_preview(ren_table)
 
-    print('rename table was created by make_ren_table()')
-
-    return ren_table 
+    return ren_table
 
 
 # リネームテーブルからリネームを実行   
 def rename_by_table(ren_table, confirm=True):
+    print('all', len(ren_table), 'files will be renamed')
+
     if confirm:
         print('execute renaming ? (yes or no) >>')
         ans = input()
@@ -131,15 +133,22 @@ def rename_by_table(ren_table, confirm=True):
             print('canceled renaming')
             return
 
+    file_num = len(ren_table)
+    cnt = 1
+
     # リネームを実行
     for old_name, new_name in ren_table.items():
+            print('RENAME IN PROGRESS :', cnt, '/', file_num, 'completed ...')
             rename(old_name, new_name)
+            cnt += 1
+
+    print(len(ren_table), 'files were renamed ')
 
 
 # リネームのプレビューを出力
 def ren_preview(ren_table):
     for old_name, new_name in ren_table.items():
-        print('[', old_name, '] -> [', new_name, ']')
+        print('[', old_name, '] ==> [', new_name, ']')
     print(len(ren_table), 'files were selected for renaming')
 
 
@@ -159,6 +168,7 @@ def validate_ren_table(ren_table):
                     fpath = os.path.join(parent_dir, base_name + '-' + str(i).zfill(4) + ext)  # 4桁ゼロ埋めの連番を付与
                     ren_table[k] = fpath  
                     i += 1;
+
 
 
 
