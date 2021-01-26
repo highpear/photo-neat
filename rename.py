@@ -1,4 +1,4 @@
-import os, sys, collections
+import os, sys, collections, datetime
 from exifio import *
 
 # Windowsでファイル名に使用できない文字
@@ -89,7 +89,7 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
 
 
 #リネームテーブルを作成する
-def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None, preview=True):
+def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None, preview=True, dt_fmt='%Y-%m-%d-%H%M%S'):
 
     ren_table = {}
 
@@ -101,12 +101,16 @@ def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None, previ
 
         for fpath in fpath_list:
             tags = get_exif(fpath)
-            tag_val = get_val_from_tags(tags, tag_name)              # 対応するexif情報を取得
+            tag_val = get_val_from_tags(tags, tag_name)              # 対応するexif情報を取得 exifreadの独自クラス
             new_fname = str(tag_val)
+
+            if tag_name == 'EXIF DateTimeOriginal' and new_fname != 'None':  # 日時形式の書式をカスタム
+                new_fname = custom_datetime_fmt(new_fname, dt_fmt=dt_fmt)
+
             if new_fname == 'None':                                  # exif情報なし
                 uk_cnt += 1                                          # exif情報不明の画像をカウント
                 new_fname = uk_fname + str(uk_cnt).zfill(uk_digits)  # 連番を用いてファイル名を生成
-            
+
             ren_mode[1] = new_fname
             # モードに応じてリネーム後のパスを生成
             fpath_renamed = get_renamed_fpath(fpath, ren_mode=tuple(ren_mode))
@@ -178,7 +182,15 @@ def validate_ren_table(ren_table):
                     n += 1;
 
 
+# 日付の書式をカスタムしたファイル名を取得
+def custom_datetime_fmt(dtstr, dt_fmt='%Y-%m-%d-%H%M%S'):
 
+    if len(dtstr) != 19:  # この文字数でなければデータが正しくない
+        return
 
-            
+    src_fmt = '%Y:%m:%d %H:%M:%S'                    # exifreadで得られる日付データの書式
+    dt = datetime.datetime.strptime(dtstr, src_fmt)  # src_fmtに応じてdatetime.datetimeを取得
+    fname = dt.strftime(dt_fmt)
+    return fname
+
 

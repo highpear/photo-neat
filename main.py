@@ -125,7 +125,7 @@ def main():
 
     # 撮影日時でリネーム
     fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
-    ren_table = make_ren_table(fpath_list, tag_name='DateTimeOriginal')
+    ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Yねん%mがつ%dにち%Hじ%Mふん%S秒')
     rename_by_table(ren_table)
 
 
