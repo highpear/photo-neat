@@ -1,5 +1,6 @@
 import os, shutil
 from exifio import *
+from rename import *
 from PIL.ExifTags import TAGS
 
 
@@ -7,20 +8,20 @@ from PIL.ExifTags import TAGS
 def cls_by_ext(fpath_list, dest_dir, move=True, jpeg2jpg=True):
 
     for fpath in fpath_list:
-        ext = fpath.split('.')[-1].upper()     # 拡張子を大文字で取得
+        _, fname, ext = split_fpath(fpath)
+        ext_dir = ext.upper()  # 拡張子を大文字としたフォルダ名にする
 
         if jpeg2jpg:  # JPGとJPEGを統一する
-            if ext == 'JPEG':
-                ext = 'JPG'
+            if ext_dir == 'JPEG':
+                ext_dir = 'JPG'
 
-        ext_dir = os.path.join(dest_dir, ext)  # 各拡張子でフォルダを作成
+        ext_dir = os.path.join(dest_dir, ext_dir)  # 各拡張子でフォルダを作成
 
         if not os.path.exists(ext_dir):        # 拡張子のフォルダが存在しなければ新規作成
             os.mkdir(ext_dir)
             print('DIR_CREATED : new directory [', ext_dir, '] was created')
 
-        fname = fpath.split('/')[-1]              # パスからファイル名のみ取得
-        dest_path = os.path.join(ext_dir, fname)  # ムーブ先のパスを生成
+        dest_path = os.path.join(ext_dir, fname + '.' + ext)  # ムーブ先のパスを生成
 
         if move:
             shutil.move(fpath, dest_path)                # ムーブを実行
@@ -48,8 +49,8 @@ def cls_by_exif(fpath_list, dest_dir, exif_name, move=True):
             os.mkdir(tag_val_dir)
             print('DIR_CREATED : new directory [', tag_val_dir, '] was created')
 
-        fname = fpath.split('/')[-1]                     # パスからファイル名のみ取得
-        dest_path = os.path.join(tag_val_dir, fname)     # ムーブ先のパスを生成
+        _, fname, ext = split_fpath(fpath)
+        dest_path = os.path.join(tag_val_dir, fname + '.' + ext)  # 処理後のパスを生成
        
         if move:
             shutil.move(fpath, dest_path)                # ムーブを実行

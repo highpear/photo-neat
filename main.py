@@ -117,17 +117,16 @@ def main():
     # コピーされた全ファイルを取得
     copied_fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
 
-    # 拡張子でフォルダ分け (コピー)   fix: JPG JPEGが違うフォルダになる
-    cls_by_ext(copied_fpath_list, now_copied_dir)
+    # 拡張子でフォルダ分け (ムーブ)
+    # cls_by_ext(copied_fpath_list, now_copied_dir)
 
     # exif情報でフォルダ分け (ムーブ)
-    # cls_by_exif(copied_fpath_list, now_copied_dir, 'Model')
+    cls_by_exif(copied_fpath_list, now_copied_dir, 'Model')
 
     # 撮影日時でリネーム
-    # fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
-    # ren_table = make_ren_table(fpath_list, tag_name='DateTimeOriginal')
-    # ren_preview(ren_table)
-    # rename_by_table(ren_table)
+    fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
+    ren_table = make_ren_table(fpath_list, tag_name='DateTimeOriginal')
+    rename_by_table(ren_table)
 
 
     print('finished at main()')

@@ -40,14 +40,19 @@ def validate_fname(fname):
     return fname
 
 
+# ファイルパスから親ディレクトリ，ファイル名，拡張子を取得
+def split_fpath(fpath):
+    dpath = os.path.dirname(fpath)   # ディレクトリパス
+    bname = os.path.basename(fpath)  # ベースネーム取得 (拡張子あり)
+    fname = bname.split('.')[0]      # ファイル名取得 (拡張子なし) 
+    ext = bname.split('.')[-1]       # 拡張子取得
+    return dpath, fname, ext
+
+
 # fpathをリネームしてリネーム後のパスを返す (親ディレクトリは変更しない, exifを読む処理は行わない)
 def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
 
-    bname = os.path.basename(fpath)   # 拡張子含む
-
-    fname = bname.split('.')[0]       # 拡張子含まないファイル名
-    ext = bname.split('.')[-1]        # ピリオド含まない拡張子
-    dirpath = os.path.dirname(fpath)  # 親ディレクトリのパス
+    dirpath, fname, ext = split_fpath(fpath)
 
     # モードに応じてリネーム後のファイル名を生成
     if ren_mode[0] == 'REPLACEALL':  # 旧ファイル名を全て置き換える (exif)
@@ -64,16 +69,21 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
         ext = ext.lower()
     elif ren_mode[0] == 'EXTUPPER':  # 拡張子を大文字に変更
         ext = ext.upper()
+    elif ren_mode[0] == 'JPEG2JPG':  # JPEGをJPGに統一
+        if ext == 'JPEG':
+            ext = 'JPG'
+        if ext == 'jpeg':
+            ext = 'jpg'
     else:
         print('ERROR: unmatched MDOE [', ren_mode[0], ']')
         sys.exit()
 
-    # 新ファイル名のバリデーション
+    # 新ファイル名のバリデーション (os禁止文字の除去，空白のリプレイス)
     fname = validate_fname(fname)
 
     # リネーム後のファイルパスの生成
-    fname = fname + '.' + ext 
-    fpath_renamed = os.path.join(dirpath, fname)
+    bname = fname + '.' + ext 
+    fpath_renamed = os.path.join(dirpath, bname)
 
     return fpath_renamed
 
@@ -159,15 +169,13 @@ def validate_ren_table(ren_table):
     result = collections.Counter(ren_table.values())  # 重複したnew_nameをカウント
     for new_name, cnt in result.items():
         if cnt > 1:                                   # 重複したnew_nameのみファイル名変更を行う
-            i = 0;                                    # 重複枚数のカウント
+            n = 0;                                    # 重複枚数のカウント
             for k, v in ren_table.items():
-                if v == new_name:                                           # 重複したnew_nameの時は末尾に連番を付与
-                    base_name = os.path.basename(new_name).split('.')[0]    # 拡張子を除いたファイル名を取得
-                    ext = '.' + new_name.split('.')[-1]                     # 拡張子を取得
-                    parent_dir = os.path.dirname(new_name)                  # 親ディレクトリのパスを取得
-                    fpath = os.path.join(parent_dir, base_name + '-' + str(i).zfill(4) + ext)  # 4桁ゼロ埋めの連番を付与
+                if v == new_name:                     # 重複したnew_nameの時は末尾に連番を付与
+                    dirname, fname, ext = split_fpath(new_name)
+                    fpath = os.path.join(dirname, fname + '-' + str(n).zfill(4) + '.' + ext)  # 4桁ゼロ埋めの連番を付与
                     ren_table[k] = fpath  
-                    i += 1;
+                    n += 1;
 
 
 
