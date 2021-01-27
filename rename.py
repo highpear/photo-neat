@@ -13,8 +13,7 @@ def rename(old_name, new_name):
     try:
         os.rename(old_name, new_name)
         print('FILE_RENAMED : file [', old_name, '] was renamed to [', new_name, ']')
-    except exception as e:
-        print(e)
+    except:
         print(old_name, 'was not renamed at rename()')
         sys.exit()
 
@@ -148,14 +147,15 @@ def rename_by_table(ren_table, confirm=True):
             return
 
     file_num = len(ren_table)
-    cnt = 1
+    cnt = 0
 
     # リネームを実行
+    print('BEGIN RENAMING...')
     for old_name, new_name in ren_table.items():
-            print('RENAME IN PROGRESS :', cnt, '/', file_num, 'completed ...')
             rename(old_name, new_name)
             cnt += 1
-
+            print('RENAME IN PROGRESS :', cnt, '/', file_num, 'completed ... (', cnt/file_num*100, '% )')
+    
     print(len(ren_table), 'files were renamed ')
 
 
