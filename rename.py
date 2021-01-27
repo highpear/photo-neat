@@ -89,15 +89,15 @@ def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
 
 
 #リネームテーブルを作成する
-def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None, preview=True, dt_fmt='%Y-%m-%d-%H%M%S'):
+def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None, preview=True, dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('Unknown-', 1, 4 )):
 
     ren_table = {}
 
     # リネームにexifタグを用いる場合
     if tag_name:
-        uk_cnt = 0                       # exif情報不明画像のカウント
-        uk_digits = 4                    # デフォルトは4桁でゼロ埋め
-        uk_fname = 'Unknown-'            # 不明画像に用いる規定のファイル名
+        uk_fname = uk_custom[0]          # 不明画像に用いる規定のファイル名
+        uk_cnt = uk_custom[1]            # exif情報不明画像のカウント開始値
+        uk_digits = uk_custom[2]         # デフォルトは4桁でゼロ埋め
 
         for fpath in fpath_list:
             tags = get_exif(fpath)
@@ -108,8 +108,8 @@ def make_ren_table(fpath_list, ren_mode=['REPLACEALL', ''], tag_name=None, previ
                 new_fname = custom_datetime_fmt(new_fname, dt_fmt=dt_fmt)
 
             if new_fname == 'None':                                  # exif情報なし
-                uk_cnt += 1                                          # exif情報不明の画像をカウント
                 new_fname = uk_fname + str(uk_cnt).zfill(uk_digits)  # 連番を用いてファイル名を生成
+                uk_cnt += 1                                          # exif情報不明の画像をカウント
 
             ren_mode[1] = new_fname
             # モードに応じてリネーム後のパスを生成
