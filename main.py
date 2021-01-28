@@ -121,7 +121,11 @@ def main():
     # cls_by_ext(copied_fpath_list, now_copied_dir)
 
     # exif情報でフォルダ分け (ムーブ)
-    cls_by_exif(copied_fpath_list, now_copied_dir, 'Image Model')
+    # cls_by_exif(copied_fpath_list, now_copied_dir, 'Image Model')
+    cls_by_dt_original(copied_fpath_list, now_copied_dir, 'year')
+    # cls_by_dt_original(copied_fpath_list, now_copied_dir, 'day')
+
+    
 
     # 撮影日時でリネーム
     fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
