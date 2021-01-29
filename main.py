@@ -124,7 +124,40 @@ def show_fpath_list(fpath_list, include_dir=False):
     print(cnt, 'files are selected now')
 
     for k, v in ext_cnt.items():
-        print(k, ':', v, '(', v/cnt*100, '% )')
+        print(k, ':', v, '(', round(v/cnt*100, 2), '% )')
+
+
+def show_dir_info(dpath, recursive=True):
+
+    if not os.path.exists(dpath):
+        print('ERROR : directory [', dpath, '] does not exist')
+        sys.exit()
+
+    if recursive:
+        files = glob.glob(dpath + '/**', recursive=True)
+    else:
+        files = glob.glob(dpath + '/*')
+
+    file_cnt = 0
+    dir_cnt = 0
+    ext_cnt = {}
+
+    for file in files:
+        if os.path.isfile(file):
+            file_cnt += 1
+            _, _, ext = split_fpath(file)
+            ext = ext.lower()
+            if ext in ext_cnt.keys():
+                ext_cnt[ext] += 1
+            else:
+                ext_cnt[ext] = 1
+        else:
+            dir_cnt += 1
+
+    print(dir_cnt, 'directories')  # 指定したディレクトリも含む
+    print(file_cnt, 'files')
+    for k, v in ext_cnt.items():
+        print(k, ':', v, 'files (', round(v/file_cnt*100, 2), '% )')
 
 
 def main():
@@ -139,7 +172,7 @@ def main():
     TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']
 
     # 条件に一致する全画像ファイルのパスをリストで取得
-    fpath_list = get_all_files(SRC_DIR, TARGET_EXT, recursive=False)
+    fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
     
     # SRC_DIR以下をOriginal以下にコピー
     # imported_dir = import_all(fpath_list, DEST_DIR)
@@ -147,6 +180,8 @@ def main():
     # コピー(インポート)された全ファイルを取得
     # imported_fpath_list = get_all_files(imported_dir, TARGET_EXT)
     show_fpath_list(fpath_list)
+
+    show_dir_info('./TestImg')
 
 
 
