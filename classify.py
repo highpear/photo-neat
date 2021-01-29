@@ -4,6 +4,7 @@ from rename import *
 from PIL.ExifTags import TAGS
 
 
+# リストで渡された全ファイルをdest_dir以下に撮影日時毎に分類する (デフォルトでムーブ)
 def cls_by_dt_original(fpath_list, dest_dir, cls_mode, move=True):
 
     for fpath in fpath_list:

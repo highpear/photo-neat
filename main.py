@@ -9,7 +9,8 @@ from rename import *
 # パスから画像をオープン
 def im_open(fpath):
     # 画像形式を判定
-    ext = fpath.split('.')[-1].lower()
+    _, _, ext = split_fpath(fpath)
+    ext = ext.lower()
     
     if ext not in COMPAT_EXT:
         print('error: uncompatible file type [', ext, ']')
@@ -21,8 +22,8 @@ def im_open(fpath):
         else:                       # Pillowで読み込む
             return Image.open(fpath)
 
-    except exception as e:
-        print('error:', e)
+    except:
+        print('error:')
         sys.exit()
 
 
@@ -41,7 +42,7 @@ def read_heif(fpath):
 
 
 # dir以下の指定拡張子のファイルパスをリストで取得
-def get_all_files(dir, TARGET_EXT=[]):
+def get_all_files(dir, TARGET_EXT=[], recursive=True):
     # 抽出したパスを格納するリスト
     fpath_list = []
     
@@ -49,13 +50,17 @@ def get_all_files(dir, TARGET_EXT=[]):
     if dir[-1] == '/':
         dir = dir[:-1]
 
-    # dir以下全てのファイルのパスを再帰的に取得
-    files = glob.glob(dir + '/**', recursive=True)
+    if recursive:
+        # dir以下全てのファイルのパスを再帰的に取得
+        files = glob.glob(dir + '/**', recursive=True)
+    else:
+        files = glob.glob(dir + '/*')
     
     for file in files:
         # 拡張子を取得
-        ext = file.split('.')[-1].lower()
-        if os.path.isfile(file) and ext in TARGET_EXT:
+        _, _, ext = split_fpath(file)
+        ext = ext.lower()
+        if os.path.isfile(file) and ext in TARGET_EXT:  # ディレクトリ除外かつ対象拡張子のみ
             fpath_list.append(file)
 
     # 結果の出力
@@ -65,72 +70,99 @@ def get_all_files(dir, TARGET_EXT=[]):
 
 
 # リスト内のファイルを全て指定のフォルダ以下の現在時刻フォルダへコピーする
-def copy_all(fpath_list, dest_dir):
+def import_all(fpath_list, dest_dir):
 
     # dest_dir以下に現在時刻でフォルダを生成する
-    dt_now = str(datetime.datetime.now())        # 現在時刻を取得
-    dt_now = dt_now.split('.')[0]                # 小数点以下の秒を除去
+    dt_now = str(datetime.datetime.now())          # 現在時刻を文字列で取得 (ex. 2021-01-29 21:15:58.592992)
 
-    dir_name = dt_now.replace(' ', '-')          # フォルダ名を生成
-    dir_name = dir_name.replace(':', '')         # コロンを除去
-    dest_dir = os.path.join(dest_dir, dir_name)  # パスを生成
+    dir_name = dt_now.split('.')[0]                # 小数点以下の秒を除去
+    dir_name = dir_name.replace(' ', '-')          # 空白を除去
+    dir_name = dir_name.replace(':', '')           # コロンを除去
 
-    if os.path.exists(dest_dir):                 # 生成するフォルダが既に存在するかチェック
+    dest_dir = os.path.join(dest_dir, dir_name)    # コピー先パスを生成
+
+    if os.path.exists(dest_dir):                   # 生成するフォルダが既に存在するかチェック (インポート実行毎に新規フォルダを生成するので既存の場合はエラーとする)
         print('ERROR : directory [', dest_dir, '] already exists')
         sys.exit()
     else:
         os.mkdir(dest_dir)                       # フォルダを新規作成
         print('DIR_CREATED : new directory [', dest_dir, '] was created')
 
-
     # コピーを実行
     cnt = 0
     for fpath in fpath_list:
-        base_name = os.path.basename(fpath)
-        dest_path = os.path.join(dest_dir, base_name)
+        bname = os.path.basename(fpath)
+        dest_path = os.path.join(dest_dir, bname)
         shutil.copy2(fpath, dest_path)
         print('FILE_COPIED : file [', fpath, '] was copied to [', dest_path, ']')
         cnt += 1
 
     print('{} files were copied to [ {} ]'.format(cnt, dest_dir))
 
-    return dest_dir
+    return dest_dir  # (コピー先ディレクトリは時刻ごとに生成される為，コピー終了後にそのパスを返す)
+
+
+def show_fpath_list(fpath_list, include_dir=False):
+    cnt = 0;
+    ext_cnt = {}
+    for fpath in fpath_list:
+        cnt += 1
+        _, _, ext = split_fpath(fpath)
+        ext = ext.lower()
+
+        if ext in ext_cnt.keys():
+            ext_cnt[ext] += 1
+        else:
+            ext_cnt[ext] = 1
+        
+        if include_dir:
+            print('[', cnt, ']', fpath)
+        else:
+            dpath, fname, ext = split_fpath(fpath)
+            print('[', cnt, ']', fname + '.' + ext)
+
+    print(cnt, 'files are selected now')
+
+    for k, v in ext_cnt.items():
+        print(k, ':', v, '(', v/cnt*100, '% )')
 
 
 def main():
 
     # 写真をコピーする基底ディレクトリを指定
-    SRC_DIR = './TestImg'  # 通常はデバイスのDCIM等を参照
+    SRC_DIR = './TestImg'           # 通常はデバイスのDCIM等を参照
 
     # コピー先のディレクトリを指定
-    DEST_DIR = './Original'
+    DEST_DIR = './Original'         # Original以下にインポートされる(SRC_DIRからコピー)
 
     # 対象とする画像ファイル形式を指定 (小文字)
     TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']
 
     # 条件に一致する全画像ファイルのパスをリストで取得
-    fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
-
+    fpath_list = get_all_files(SRC_DIR, TARGET_EXT, recursive=False)
+    
     # SRC_DIR以下をOriginal以下にコピー
-    now_copied_dir = copy_all(fpath_list, DEST_DIR)
+    # imported_dir = import_all(fpath_list, DEST_DIR)
 
-    # コピーされた全ファイルを取得
-    copied_fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
+    # コピー(インポート)された全ファイルを取得
+    # imported_fpath_list = get_all_files(imported_dir, TARGET_EXT)
+    show_fpath_list(fpath_list)
+
+
 
     # 拡張子でフォルダ分け (ムーブ)
-    # cls_by_ext(copied_fpath_list, now_copied_dir)
+    # cls_by_ext(imported_fpath_list, imported_dir)
 
     # exif情報でフォルダ分け (ムーブ)
-    # cls_by_exif(copied_fpath_list, now_copied_dir, 'Image Model')
-    cls_by_dt_original(copied_fpath_list, now_copied_dir, 'year')
-    # cls_by_dt_original(copied_fpath_list, now_copied_dir, 'day')
+    # cls_by_exif(imported_fpath_list, imported_dir, 'Image Model')
+    # cls_by_dt_original(imported_fpath_list, imported_dir, 'year')
+   
 
-    
 
     # 撮影日時でリネーム
-    fpath_list = get_all_files(now_copied_dir, TARGET_EXT)
-    ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('不明ちゃん-', 2, 8))
-    rename_by_table(ren_table)
+    # fpath_list = get_all_files(imported_dir, TARGET_EXT)
+    # ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('不明-', 1, 3))
+    # rename_by_table(ren_table)
 
 
     print('finished at main()')
