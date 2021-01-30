@@ -48,6 +48,15 @@ def split_fpath(fpath):
     return dpath, fname, ext
 
 
+# fpathと同名のAAEファイルが存在するか判定
+def has_aae(fpath):
+    dpath, fname, _ = split_fpath(fpath)
+    if os.path.exists(os.path.join(dpath, fname + '.AAE')):
+        return True
+    else:
+        False
+
+
 # fpathをリネームしてリネーム後のパスを返す (親ディレクトリは変更しない, exifを読む処理は行わない)
 def get_renamed_fpath(fpath, ren_mode=('REPLACEALL',)):
 
