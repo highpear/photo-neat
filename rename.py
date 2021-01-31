@@ -175,6 +175,22 @@ def ren_preview(ren_table):
     print(len(ren_table), 'files were selected for renaming')
 
 
+# リネームテーブルに基づいてリネームをアンドゥ
+def undo_rename_by_table(ren_table):
+    not_exists = []
+    for old_name, new_name in ren_table.items():
+            # パスが存在するか確認
+            if os.path.exists(new_name):
+                rename(new_name, old_name)
+            else:  # リネーム後に手動で直接ファイル名を変更した場合などはこれに該当
+                not_exists.append(new_name)
+
+    if len(not_exists) == 0:
+        print('all', len(ren_table), 'files were renamed to each previous name')
+    else:
+        print(len(not_exists), 'files were not found, so these files were not renamed')
+
+
 # リネーム後の名前を検証
 def validate_ren_table(ren_table):
 
