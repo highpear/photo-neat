@@ -167,6 +167,16 @@ def rename_by_table(ren_table, confirm=True):
     
     print(len(ren_table), 'files were renamed ')
 
+    # 終了の確認
+    print('do you finish renaming ? (yes or no) >>')
+    ans = input()
+    if ans == 'yes':
+        return
+    elif ans == 'no':
+        print('undo rename ? (yes or no) >>')
+        if ans == 'yes':
+            undo_rename_by_table(ren_table)
+
 
 # リネームのプレビューを出力
 def ren_preview(ren_table):
