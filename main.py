@@ -42,7 +42,7 @@ def read_heif(fpath):
 
 
 # dir以下の指定拡張子のファイルパスをリストで取得
-def get_all_files(dir, TARGET_EXT=[], recursive=True):
+def get_all_files(dir, TARGET_EXT=[], recursive=True):     # AAEを含めるオプションを追加
     # 抽出したパスを格納するリスト
     fpath_list = []
     
@@ -157,7 +157,20 @@ def show_dir_info(dpath, recursive=True):
     print(dir_cnt, 'directories')  # 指定したディレクトリも含む
     print(file_cnt, 'files')
     for k, v in ext_cnt.items():
-        print(k, ':', v, 'files (', round(v/file_cnt*100, 2), '% )')
+        print(k.upper(), ':', v, 'files (', round(v/file_cnt*100, 2), '% )')
+
+
+# ファイルの情報を表示する
+def show_file_info(fpath):
+    result = os.stat(fpath)
+    print('size:', result.st_size)                                    # MB
+    print('atime', datetime.datetime.fromtimestamp(result.st_atime))  # 最終アクセス日時
+    print('mtime', datetime.datetime.fromtimestamp(result.st_mtime))  # 最終内容更新日時 ( =撮影日時 )
+    print('ctime', datetime.datetime.fromtimestamp(result.st_ctime))  # メタデータの最終更新日時 (UNIX) / 作成日時 (Windows)
+    try:
+        print('birthtime', datetime.datetime.fromtimestamp(result.st_birthtime))  # 作成日時 (macOSを含むFreeBSD系)
+    except AttributeError as e:
+        return
 
 
 def main():
@@ -181,7 +194,9 @@ def main():
     # imported_fpath_list = get_all_files(imported_dir, TARGET_EXT)
     show_fpath_list(fpath_list)
 
-    show_dir_info('./TestImg')
+    # show_dir_info('../../../Downloads/DCIM') # 思い
+    show_file_info('../../../Downloads/DCIM/104APPLE/IMG_4055.MOV')
+    
 
 
 
