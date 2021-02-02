@@ -42,7 +42,11 @@ def read_heif(fpath):
 
 
 # dir以下の指定拡張子のファイルパスをリストで取得
-def get_all_files(dir, TARGET_EXT=[], recursive=True):     # AAEを含めるオプションを追加
+def get_all_files(dir, TARGET_EXT=[], recursive=True, includeAAE=False):
+
+    if includeAAE:                # 写真編集履歴ファイルを含める場合
+        TARGET_EXT.append('aae')
+    
     # 抽出したパスを格納するリスト
     fpath_list = []
     
