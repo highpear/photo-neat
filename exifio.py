@@ -3,7 +3,6 @@ import sys
 from PIL import Image
 from PIL.ExifTags import TAGS
 import exifread
-import pyheif
 
 # 対応する画像形式を定義
 COMPAT_EXT = ('jpg', 'jpeg', 'png', 'tiff', 'heic')

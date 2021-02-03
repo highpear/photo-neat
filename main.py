@@ -1,9 +1,11 @@
 from PIL import Image
-import sys, os, glob, shutil, datetime
+import sys, os, glob, shutil, datetime, platform
 
 from classify import *
 from exifio import *
 from rename import *
+
+import pyheif
 
 
 # パスから画像をオープン
@@ -106,7 +108,7 @@ def import_all(fpath_list, dest_dir):
     return dest_dir  # (コピー先ディレクトリは時刻ごとに生成される為，コピー終了後にそのパスを返す)
 
 
-def show_fpath_list(fpath_list, include_dir=False):
+def show_fpath_list(fpath_list, include_dir_path=False):  # yieldを使用へ
     cnt = 0;
     ext_cnt = {}
     for fpath in fpath_list:
@@ -119,7 +121,7 @@ def show_fpath_list(fpath_list, include_dir=False):
         else:
             ext_cnt[ext] = 1
         
-        if include_dir:
+        if include_dir_path:
             print('[', cnt, ']', fpath)
         else:
             dpath, fname, ext = split_fpath(fpath)
@@ -165,16 +167,30 @@ def show_dir_info(dpath, recursive=True):
 
 
 # ファイルの情報を表示する
-def show_file_info(fpath):
+def show_file_info(fpath, use_mtime_for_birthtime=False):
+
     result = os.stat(fpath)
-    print('size:', result.st_size)                                    # MB
-    print('atime', datetime.datetime.fromtimestamp(result.st_atime))  # 最終アクセス日時
-    print('mtime', datetime.datetime.fromtimestamp(result.st_mtime))  # 最終内容更新日時 ( =撮影日時 )
-    print('ctime', datetime.datetime.fromtimestamp(result.st_ctime))  # メタデータの最終更新日時 (UNIX) / 作成日時 (Windows)
-    try:
-        print('birthtime', datetime.datetime.fromtimestamp(result.st_birthtime))  # 作成日時 (macOSを含むFreeBSD系)
-    except AttributeError as e:
-        return
+
+    size = result.st_size                                     # ファイルサイズ
+    atime = datetime.datetime.fromtimestamp(result.st_atime)  # 最終アクセス日時
+    mtime = datetime.datetime.fromtimestamp(result.st_mtime)  # 最終内容更新日時 ( = 撮影日時 )
+    ctime = None                                              # メタデータの最終更新日時(UNIX) / 作成日時(Windows)
+
+    # ctimeはOSによって以下の処理で分岐
+    if platform.system() == 'Windows':
+        ctime = os.path.getctime(fpath)
+    else:                                # MacOS含むFreeBSD系など
+        try:
+            ctime = datetime.datetime.fromtimestamp(result.st_birthtime)  # 存在すればbirthtimeを使う
+        except AttributeError:
+            if use_mtime_for_birthtime:  # birthtimeの代わりにmtimeを使用するオプション
+                ctime = mtime
+
+    # 取得した値を表示
+    print('size:', size)
+    print('atime', atime)
+    print('mtime', mtime)
+    print('ctime', ctime)
 
 
 def main():
@@ -189,14 +205,14 @@ def main():
     TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']
 
     # 条件に一致する全画像ファイルのパスをリストで取得
-    fpath_list = get_all_files(SRC_DIR, TARGET_EXT)
+    # fpath_list = get_all_files("../../../Downloads/DCIM/", TARGET_EXT, includeAAE=True)
     
     # SRC_DIR以下をOriginal以下にコピー
     # imported_dir = import_all(fpath_list, DEST_DIR)
 
     # コピー(インポート)された全ファイルを取得
     # imported_fpath_list = get_all_files(imported_dir, TARGET_EXT)
-    show_fpath_list(fpath_list)
+    # show_fpath_list(fpath_list)
 
     # show_dir_info('../../../Downloads/DCIM') # 思い
     show_file_info('../../../Downloads/DCIM/104APPLE/IMG_4055.MOV')
