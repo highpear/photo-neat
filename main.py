@@ -5,7 +5,7 @@ from classify import *
 from exifio import *
 from rename import *
 
-import pyheif
+# import pyheif
 
 
 # パスから画像をオープン
@@ -20,27 +20,13 @@ def im_open(fpath):
 
     try:
         if ext == 'heic':
-            return read_heif(fpath)
+            return # read_heif(fpath)
         else:                       # Pillowで読み込む
             return Image.open(fpath)
 
     except:
         print('error:')
         sys.exit()
-
-
-# heic形式の画像を読み込む
-def read_heif(fpath):
-    im_heif = pyheif.read(fpath)
-    im = Image.frombytes(
-        im_heif.mode,
-        im_heif.size, 
-        im_heif.data,
-        "raw",
-        im_heif.mode,
-        im_heif.stride,
-        )
-    return im
 
 
 # dir以下の指定拡張子のファイルパスをリストで取得
