@@ -8,27 +8,6 @@ from rename import *
 # import pyheif
 
 
-# パスから画像をオープン
-def im_open(fpath):
-    # 画像形式を判定
-    _, _, ext = split_fpath(fpath)
-    ext = ext.lower()
-    
-    if ext not in COMPAT_EXT:
-        print('error: uncompatible file type [', ext, ']')
-        sys.exit()
-
-    try:
-        if ext == 'heic':
-            return # read_heif(fpath)
-        else:                       # Pillowで読み込む
-            return Image.open(fpath)
-
-    except:
-        print('error:')
-        sys.exit()
-
-
 # dir以下の指定拡張子のファイルパスをリストで取得
 def get_all_files(dir, TARGET_EXT=[], recursive=True, includeAAE=False):
 
@@ -188,7 +167,7 @@ def main():
     parser.add_argument('--src', help='入力元のフォルダを指定します (デフォルトで現在のフォルダ)' )
     parser.add_argument('--dest', help='出力先のフォルダを指定します (デフォルトで現在のフォルダ)')
     parser.add_argument('--target', help='処理を適用するファイル拡張子を空白区切りで指定します (デフォルトで JPG PNG HEIC)')
-    parser.add_argument('--recursive', help='入力元フォルダ直下のファイルのみ処理します (デフォルトで無効)')
+    parser.add_argument('--recursive', help='入力元フォルダ以下のサブフォルダ全てを処理します (デフォルトで有効)')
     parser.add_argument('--safety', help='入力元フォルダからPC本体へファイルをコピーしてから処理を実行します (デフォルトで有効)')
     # 分類におけるオプション
     parser.add_argument('--exiftagname', help='exifタグの名称を指定します')
@@ -228,15 +207,9 @@ def main():
     if  args.minzeros:
         MIN_ZEROS = args.minzeros
 
-    # パース結果のテスト
-    # print(f"SRC_DIR = {SRC_DIR}")
-    # print(f"DEST_DIR = {DEST_DIR}")
-    # print(f"TARGET_EXT = {TARGET_EXT}")
-    # print(f"RECURSIVE = {RECURSIVE}")
-
     # パスのチェック
     if not os.path.exists(SRC_DIR):
-        print('参照元のディレクトリが存在しません')
+        print('入力元のディレクトリが存在しません')
         sys.exit()
     if not os.path.exists(DEST_DIR):
         print('出力先のディレクトリが存在しません')
@@ -249,8 +222,7 @@ def main():
     # 入力元フォルダからファイルをコピー
     if SAFETY:
         print('一時フォルダにコピーします')
-        imported_dir = import_all(fpath_list, DEST_DIR)  # DEST_DIR以下にコピー
-        SRC_DIR = imported_dir                           # SRC_DIRを更新
+        SRC_DIR = import_all(fpath_list, DEST_DIR)  # DEST_DIR以下にコピー
 
     # 実行する処理ごとに分岐
     mode = args.arg1
@@ -259,15 +231,15 @@ def main():
         fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT)
         # 分類オプションで分岐
         cls_mode = args.arg2
-        if cls_mode == 'ext':  # 拡張子でフォルダ分け
+        if cls_mode == 'ext':        # 拡張子でフォルダ分け
             cls_by_ext(fpath_list, DEST_DIR)
-        elif cls_mode == 'year':
+        elif cls_mode == 'year':     # 撮影年でフォルダ分け
             cls_by_dt_original(fpath_list, DEST_DIR, 'year')
-        elif cls_mode == 'month':
+        elif cls_mode == 'month':    # 撮影月でフォルダ分け
             cls_by_dt_original(fpath_list, DEST_DIR, 'month')
-        elif cls_mode == 'day':
+        elif cls_mode == 'day':      # 撮影日でフォルダ分け
             cls_by_dt_original(fpath_list, DEST_DIR, 'day')
-        elif cls_mode == 'exiftag':  # 非推奨
+        elif cls_mode == 'exiftag':  # EXIFタグ名を直接指定してフォルダ分け (現在非推奨)
             if args.exiftagname:
                 tag_name = args.exiftagname
             else:
@@ -282,22 +254,23 @@ def main():
         print('指定された全ファイルをリネームします')
         fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT)
 
-        ren_method = ['REPLACEALL', '']
+        ren_method = ['REPLACEALL', '']  # リネーム方式はデフォルトでファイル名を全置換
         if args.renmethod:
             ren_method = args.renmethod.split('=')
 
-        # リネームオプションで分岐 (テーブルの作成のみ)
+        # リネームオプションで分岐 (テーブル作成のみ)
         ren_mode = args.arg2
         if ren_mode == 'datetime_original':  # 撮影日時でリネーム
             ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S',
                                        uk_custom=ALTNAME, cnt_begin=CNT_BEGIN, min_zeros=MIN_ZEROS)
-        elif ren_mode != None:               # 任意文字列でリネーム
+        elif ren_mode != None:               # 任意文字列でリネーム (任意文字列はren_methodの[1]に存在している)
             ren_table = make_ren_table(fpath_list, ren_method=ren_method,
                                        uk_custom=ALTNAME, cnt_begin=CNT_BEGIN, min_zeros=MIN_ZEROS)
         else:
             print('有効なリネームモードを入力してください')
             sys.exit()
-        # テーブルに従ってリネームの実行
+
+        # 作成したテーブルに従ってリネームを実行
         rename_by_table(ren_table)
 
     else:
