@@ -1,5 +1,6 @@
 from PIL import Image
 import sys, os, glob, shutil, datetime, platform
+import argparse
 
 from classify import *
 from exifio import *
@@ -164,7 +165,7 @@ def show_file_info(fpath, use_mtime_for_birthtime=False):
 
     # ctimeはOSによって以下の処理で分岐
     if platform.system() == 'Windows':
-        ctime = os.path.getctime(fpath)
+        ctime = datetime.datetime.fromtimestamp(result.st_ctime)
     else:                                # MacOS含むFreeBSD系など
         try:
             ctime = datetime.datetime.fromtimestamp(result.st_birthtime)  # 存在すればbirthtimeを使う
@@ -181,14 +182,58 @@ def show_file_info(fpath, use_mtime_for_birthtime=False):
 
 def main():
 
-    # 写真をコピーする基底ディレクトリを指定
-    SRC_DIR = './TestImg'           # 通常はデバイスのDCIM等を参照
+    # parser setting
+    parser = argparse.ArgumentParser(description='画像や動画ファイルを分類したりリネームしたりするソフトです')
+    parser.add_argument('arg1', help='実行する処理を指定します \nファイルの分類: clsby\nファイルのリネーム: renby')
+    parser.add_argument('arg2', help='処理に応じて必須項目を入力します')
+    # 共通のオプションを設定
+    parser.add_argument('--src', help='入力元のフォルダを指定します (デフォルトで現在のフォルダ)' )
+    parser.add_argument('--dest', help='出力先のフォルダを指定します (デフォルトで現在のフォルダ)')
+    parser.add_argument('--target', help='処理を適用するファイル拡張子を空白区切りで指定します (デフォルトで JPG PNG HEIC)')
+    parser.add_argument('--recursive', help='入力元フォルダ直下のファイルのみ処理します (デフォルトで無効)')
+    # リネームにおけるオプション
+    parser.add_argument('--rentype', help='リネームタイプを指定します')
+    parser.add_argument('--altname', help='対象の情報が存在しない場合にファイル名として与える文字列を指定します')
+    parser.add_argument('--cntstarts', help='連番の開始番号を指定します')
 
-    # コピー先のディレクトリを指定
-    DEST_DIR = './Original'         # Original以下にインポートされる(SRC_DIRからコピー)
 
-    # 対象とする画像ファイル形式を指定 (小文字)
-    TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']
+    args = parser.parse_args()
+
+    # デフォルト値の設定
+    SRC_DIR = '.'                                # コピー元のディレクトリ
+    DEST_DIR = '.'                               # 処理後のファイルの保存先ディレクトリ
+    TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']  # 処理の対象とする拡張子
+    RECURSIVE = True                             # ファイル検索の際，サブフォルダ以下を含める
+
+    # オプションに応じてデフォルト値を更新
+    if args.src:
+        SRC_DIR = args.src
+    if args.dest:
+        DEST_DIR = args.dest
+    if args.target:
+        TARGET_EXT = args.target.split(' ')
+    if args.recursive != None:
+        RECURSIVE = bool(int(args.recursive))
+
+    # パース結果のテスト
+    # print(f"SRC_DIR = {SRC_DIR}")
+    # print(f"DEST_DIR = {DEST_DIR}")
+    # print(f"TARGET_EXT = {TARGET_EXT}")
+    # print(f"RECURSIVE = {RECURSIVE}")
+
+
+    # 実行する処理ごとに分岐
+    mode = args.arg1
+    if mode == 'clsby':   # 分類処理
+        print('分類します')
+
+    elif mode == 'renby':  # リネーム処理
+        print('リネームします')
+
+    else:
+        print('第1引数の値が不正です\n有効な引数は [clsby], [renby] のみです')
+        sys.exit()
+
 
     # 条件に一致する全画像ファイルのパスをリストで取得
     # fpath_list = get_all_files("../../../Downloads/DCIM/", TARGET_EXT, includeAAE=True)
@@ -199,11 +244,6 @@ def main():
     # コピー(インポート)された全ファイルを取得
     # imported_fpath_list = get_all_files(imported_dir, TARGET_EXT)
     # show_fpath_list(fpath_list)
-
-    # show_dir_info('../../../Downloads/DCIM') # 思い
-    show_file_info('../../../Downloads/DCIM/104APPLE/IMG_4055.MOV')
-    
-
 
 
     # 拡張子でフォルダ分け (ムーブ)
