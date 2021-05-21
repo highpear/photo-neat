@@ -5,7 +5,6 @@ import argparse
 from classify import *
 from exifio import *
 from rename import *
-
 # import pyheif
 
 
@@ -62,7 +61,7 @@ def get_all_files(dir, TARGET_EXT=[], recursive=True, includeAAE=False):
     return fpath_list
 
 
-# リスト内のファイルを全て指定のフォルダ以下の現在時刻フォルダへコピーする
+# リスト内のファイルを全て指定のフォルダ以下の[Original_現在時刻/]フォルダへコピーする
 def import_all(fpath_list, dest_dir):
 
     # dest_dir以下に現在時刻でフォルダを生成する
@@ -71,10 +70,10 @@ def import_all(fpath_list, dest_dir):
     dir_name = dt_now.split('.')[0]                # 小数点以下の秒を除去
     dir_name = dir_name.replace(' ', '-')          # 空白を除去
     dir_name = dir_name.replace(':', '')           # コロンを除去
-
+    dir_name = 'Original_' + dir_name              # 最終的なディレクトリ名
     dest_dir = os.path.join(dest_dir, dir_name)    # コピー先パスを生成
 
-    if os.path.exists(dest_dir):                   # 生成するフォルダが既に存在するかチェック (インポート実行毎に新規フォルダを生成するので既存の場合はエラーとする)
+    if os.path.exists(dest_dir):                   # コピー先フォルダが既に存在するかチェック
         print('ERROR : directory [', dest_dir, '] already exists')
         sys.exit()
     else:
@@ -191,6 +190,7 @@ def main():
     parser.add_argument('--dest', help='出力先のフォルダを指定します (デフォルトで現在のフォルダ)')
     parser.add_argument('--target', help='処理を適用するファイル拡張子を空白区切りで指定します (デフォルトで JPG PNG HEIC)')
     parser.add_argument('--recursive', help='入力元フォルダ直下のファイルのみ処理します (デフォルトで無効)')
+    parser.add_argument('--safety', help='入力元フォルダからPC本体へファイルをコピーしてから処理を実行します (デフォルトで有効)')
     # リネームにおけるオプション
     parser.add_argument('--rentype', help='リネームタイプを指定します')
     parser.add_argument('--altname', help='対象の情報が存在しない場合にファイル名として与える文字列を指定します')
@@ -204,6 +204,7 @@ def main():
     DEST_DIR = '.'                               # 処理後のファイルの保存先ディレクトリ
     TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']  # 処理の対象とする拡張子
     RECURSIVE = True                             # ファイル検索の際，サブフォルダ以下を含める
+    SAFETY = True                                # SRC_DIR から一度コピーして処理を実行
 
     # オプションに応じてデフォルト値を更新
     if args.src:
@@ -214,6 +215,8 @@ def main():
         TARGET_EXT = args.target.split(' ')
     if args.recursive != None:
         RECURSIVE = bool(int(args.recursive))
+    if args.safety != None:
+        SAFETY = bool(int(args.safety))
 
     # パース結果のテスト
     # print(f"SRC_DIR = {SRC_DIR}")
@@ -221,6 +224,23 @@ def main():
     # print(f"TARGET_EXT = {TARGET_EXT}")
     # print(f"RECURSIVE = {RECURSIVE}")
 
+    # パスのチェック
+    if not os.path.exists(SRC_DIR):
+        print('参照元のディレクトリが存在しません')
+        sys.exit()
+    if not os.path.exists(DEST_DIR):
+        print('出力先のディレクトリが存在しません')
+        sys.exit()
+
+    # 対象のファイルパスを取得
+    fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT, recursive=RECURSIVE)
+    print(f'{len(fpath_list)}件のファイルが見つかりました')
+
+    # 入力元フォルダからファイルをコピー
+    if SAFETY:
+        print('一時フォルダにコピーします')
+        original_dir = import_all(fpath_list, DEST_DIR)  # DEST_DIR以下にOriginal_...を作成してコピー
+        SRC_DIR = original_dir                           # SRC_DIRをOriginalに更新
 
     # 実行する処理ごとに分岐
     mode = args.arg1
@@ -235,16 +255,6 @@ def main():
         sys.exit()
 
 
-    # 条件に一致する全画像ファイルのパスをリストで取得
-    # fpath_list = get_all_files("../../../Downloads/DCIM/", TARGET_EXT, includeAAE=True)
-    
-    # SRC_DIR以下をOriginal以下にコピー
-    # imported_dir = import_all(fpath_list, DEST_DIR)
-
-    # コピー(インポート)された全ファイルを取得
-    # imported_fpath_list = get_all_files(imported_dir, TARGET_EXT)
-    # show_fpath_list(fpath_list)
-
 
     # 拡張子でフォルダ分け (ムーブ)
     # cls_by_ext(imported_fpath_list, imported_dir)
@@ -252,8 +262,6 @@ def main():
     # exif情報でフォルダ分け (ムーブ)
     # cls_by_exif(imported_fpath_list, imported_dir, 'Image Model')
     # cls_by_dt_original(imported_fpath_list, imported_dir, 'year')
-   
-
 
     # 撮影日時でリネーム
     # fpath_list = get_all_files(imported_dir, TARGET_EXT)
