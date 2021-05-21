@@ -196,6 +196,7 @@ def main():
     parser.add_argument('--rentype', help='リネームタイプを指定します')
     parser.add_argument('--altname', help='対象の情報が存在しない場合にファイル名として与える文字列を指定します')
     parser.add_argument('--cntstarts', help='連番の開始番号を指定します')
+    parser.add_argument('--renmethod', help='リネーム文字列の配置をカスタマイズします')
 
     args = parser.parse_args()
 
@@ -271,12 +272,17 @@ def main():
     elif mode == 'renby':  # リネーム処理
         print('指定された全ファイルをリネームします')
         fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT)
+
+        ren_method = ['REPLACEALL', '']
+        if args.renmethod:
+            ren_method = args.renmethod.split('=')
+
         # リネームオプションで分岐 (テーブルの作成のみ)
         ren_mode = args.arg2
         if ren_mode == 'datetime_original':  # 撮影日時でリネーム
             ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('Unknown-', 1, 4))
         elif ren_mode != None:               # 任意文字列でリネーム
-            ren_table = make_ren_table(fpath_list, ren_mode=['REPLACEALL', ren_mode])
+            ren_table = make_ren_table(fpath_list, ren_method=ren_method)
         else:
             print('有効なリネームモードを入力してください')
             sys.exit()
