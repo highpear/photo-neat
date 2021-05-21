@@ -70,7 +70,6 @@ def import_all(fpath_list, dest_dir):
     dir_name = dt_now.split('.')[0]                # 小数点以下の秒を除去
     dir_name = dir_name.replace(' ', '-')          # 空白を除去
     dir_name = dir_name.replace(':', '')           # コロンを除去
-    dir_name = 'Original_' + dir_name              # 最終的なディレクトリ名
     dest_dir = os.path.join(dest_dir, dir_name)    # コピー先パスを生成
 
     if os.path.exists(dest_dir):                   # コピー先フォルダが既に存在するかチェック
@@ -191,11 +190,12 @@ def main():
     parser.add_argument('--target', help='処理を適用するファイル拡張子を空白区切りで指定します (デフォルトで JPG PNG HEIC)')
     parser.add_argument('--recursive', help='入力元フォルダ直下のファイルのみ処理します (デフォルトで無効)')
     parser.add_argument('--safety', help='入力元フォルダからPC本体へファイルをコピーしてから処理を実行します (デフォルトで有効)')
+    # 分類におけるオプション
+    parser.add_argument('--exiftagname', help='exifタグの名称を指定します')
     # リネームにおけるオプション
     parser.add_argument('--rentype', help='リネームタイプを指定します')
     parser.add_argument('--altname', help='対象の情報が存在しない場合にファイル名として与える文字列を指定します')
     parser.add_argument('--cntstarts', help='連番の開始番号を指定します')
-
 
     args = parser.parse_args()
 
@@ -239,35 +239,53 @@ def main():
     # 入力元フォルダからファイルをコピー
     if SAFETY:
         print('一時フォルダにコピーします')
-        original_dir = import_all(fpath_list, DEST_DIR)  # DEST_DIR以下にOriginal_...を作成してコピー
-        SRC_DIR = original_dir                           # SRC_DIRをOriginalに更新
+        imported_dir = import_all(fpath_list, DEST_DIR)  # DEST_DIR以下にコピー
+        SRC_DIR = imported_dir                           # SRC_DIRを更新
 
     # 実行する処理ごとに分岐
     mode = args.arg1
     if mode == 'clsby':   # 分類処理
-        print('分類します')
+        print('指定された全ファイルを分類します')
+        fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT)
+        # 分類オプションで分岐
+        cls_mode = args.arg2
+        if cls_mode == 'ext':  # 拡張子でフォルダ分け
+            cls_by_ext(fpath_list, DEST_DIR)
+        elif cls_mode == 'year':
+            cls_by_dt_original(fpath_list, DEST_DIR, 'year')
+        elif cls_mode == 'month':
+            cls_by_dt_original(fpath_list, DEST_DIR, 'month')
+        elif cls_mode == 'day':
+            cls_by_dt_original(fpath_list, DEST_DIR, 'day')
+        elif cls_mode == 'exiftag':  # 非推奨
+            if args.exiftagname:
+                tag_name = args.exiftagname
+            else:
+                print('exifタグの名称を指定してください')
+                sys.exit()
+            cls_by_exif(fpath_list, DEST_DIR, tag_name)
+        else:
+            print('有効な分類モードを入力してください')
+            sys.exit()
 
     elif mode == 'renby':  # リネーム処理
-        print('リネームします')
+        print('指定された全ファイルをリネームします')
+        fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT)
+        # リネームオプションで分岐 (テーブルの作成のみ)
+        ren_mode = args.arg2
+        if ren_mode == 'datetime_original':  # 撮影日時でリネーム
+            ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('Unknown-', 1, 4))
+        elif ren_mode != None:               # 任意文字列でリネーム
+            ren_table = make_ren_table(fpath_list, ren_mode=['REPLACEALL', ren_mode])
+        else:
+            print('有効なリネームモードを入力してください')
+            sys.exit()
+        # テーブルに従ってリネームの実行
+        rename_by_table(ren_table)
 
     else:
         print('第1引数の値が不正です\n有効な引数は [clsby], [renby] のみです')
         sys.exit()
-
-
-
-    # 拡張子でフォルダ分け (ムーブ)
-    # cls_by_ext(imported_fpath_list, imported_dir)
-
-    # exif情報でフォルダ分け (ムーブ)
-    # cls_by_exif(imported_fpath_list, imported_dir, 'Image Model')
-    # cls_by_dt_original(imported_fpath_list, imported_dir, 'year')
-
-    # 撮影日時でリネーム
-    # fpath_list = get_all_files(imported_dir, TARGET_EXT)
-    # ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('不明-', 1, 3))
-    # rename_by_table(ren_table)
-
 
     print('finished at main()')
 
