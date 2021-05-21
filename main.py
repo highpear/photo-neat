@@ -193,10 +193,10 @@ def main():
     # 分類におけるオプション
     parser.add_argument('--exiftagname', help='exifタグの名称を指定します')
     # リネームにおけるオプション
-    parser.add_argument('--rentype', help='リネームタイプを指定します')
     parser.add_argument('--altname', help='対象の情報が存在しない場合にファイル名として与える文字列を指定します')
-    parser.add_argument('--cntstarts', help='連番の開始番号を指定します')
+    parser.add_argument('--cntbegin', help='連番の開始番号を指定します')
     parser.add_argument('--renmethod', help='リネーム文字列の配置をカスタマイズします')
+    parser.add_argument('--minzeros', help='連番生成時の0埋めの桁数を指定します')
 
     args = parser.parse_args()
 
@@ -206,6 +206,9 @@ def main():
     TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']  # 処理の対象とする拡張子
     RECURSIVE = True                             # ファイル検索の際，サブフォルダ以下を含める
     SAFETY = True                                # SRC_DIR から一度コピーして処理を実行
+    ALTNAME = 'Unknown-'                         # 情報不明画像のデフォルトファイル名
+    CNT_BEGIN = 1                                # 重複ファイルのカウント開始値
+    MIN_ZEROS = 4                                # カウント時に0埋めする桁
 
     # オプションに応じてデフォルト値を更新
     if args.src:
@@ -218,6 +221,12 @@ def main():
         RECURSIVE = bool(int(args.recursive))
     if args.safety != None:
         SAFETY = bool(int(args.safety))
+    if args.altname:
+        ALTNAME = args.altname
+    if args.cntbegin:
+        CNT_BEGIN = args.cntbegin
+    if  args.minzeros:
+        MIN_ZEROS = args.minzeros
 
     # パース結果のテスト
     # print(f"SRC_DIR = {SRC_DIR}")
@@ -280,9 +289,11 @@ def main():
         # リネームオプションで分岐 (テーブルの作成のみ)
         ren_mode = args.arg2
         if ren_mode == 'datetime_original':  # 撮影日時でリネーム
-            ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('Unknown-', 1, 4))
+            ren_table = make_ren_table(fpath_list, tag_name='EXIF DateTimeOriginal', dt_fmt='%Y-%m-%d-%H%M%S',
+                                       uk_custom=ALTNAME, cnt_begin=CNT_BEGIN, min_zeros=MIN_ZEROS)
         elif ren_mode != None:               # 任意文字列でリネーム
-            ren_table = make_ren_table(fpath_list, ren_method=ren_method)
+            ren_table = make_ren_table(fpath_list, ren_method=ren_method,
+                                       uk_custom=ALTNAME, cnt_begin=CNT_BEGIN, min_zeros=MIN_ZEROS)
         else:
             print('有効なリネームモードを入力してください')
             sys.exit()
