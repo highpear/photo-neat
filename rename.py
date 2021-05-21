@@ -96,15 +96,17 @@ def get_renamed_fpath(fpath, ren_method=('REPLACEALL',)):
 
 
 #リネームテーブルを作成する
-def make_ren_table(fpath_list, ren_method=['REPLACEALL', ''], tag_name=None, preview=True, dt_fmt='%Y-%m-%d-%H%M%S', uk_custom=('Unknown-', 1, 4 )):
+def make_ren_table(fpath_list, ren_method=['REPLACEALL', ''], tag_name=None,
+                   preview=True, dt_fmt='%Y-%m-%d-%H%M%S', uk_custom='Unknown-',
+                   cnt_begin=1, min_zeros=4):
 
     ren_table = {}
 
     # リネームにexifタグを用いる場合
     if tag_name:
-        uk_fname = uk_custom[0]          # 不明画像に用いる規定のファイル名
-        uk_cnt = uk_custom[1]            # exif情報不明画像のカウント開始値
-        uk_digits = uk_custom[2]         # デフォルトは4桁でゼロ埋め
+        uk_fname = uk_custom             # 不明画像に用いる規定のファイル名
+        uk_cnt = cnt_begin               # exif情報不明画像のカウント開始値
+        uk_digits = min_zeros            # デフォルトは4桁でゼロ埋め
 
         for fpath in fpath_list:
             tags = get_exif(fpath)
@@ -132,7 +134,7 @@ def make_ren_table(fpath_list, ren_method=['REPLACEALL', ''], tag_name=None, pre
             ren_table[fpath] = fpath_renamed
 
     # リネームテーブルのバリデーション (重複チェック，リネームの前に必ず実行)
-    validate_ren_table(ren_table)
+    validate_ren_table(ren_table, cnt_begin=cnt_begin, min_zeros=min_zeros)
 
     # リネームのプレビューを出力
     if preview:
@@ -201,17 +203,17 @@ def undo_rename_by_table(ren_table):
 
 
 # リネーム後の名前を検証
-def validate_ren_table(ren_table):
+def validate_ren_table(ren_table, cnt_begin=1, min_zeros=4):
 
     # 重複した際に連番を付ける
     result = collections.Counter(ren_table.values())  # 重複したnew_nameをカウント
     for new_name, cnt in result.items():
         if cnt > 1:                                   # 重複したnew_nameのみファイル名変更を行う
-            n = 0;                                    # 重複枚数のカウント
+            n = 0                                     # 重複枚数のカウント
             for k, v in ren_table.items():
                 if v == new_name:                     # 重複したnew_nameの時は末尾に連番を付与
                     dirname, fname, ext = split_fpath(new_name)
-                    fpath = os.path.join(dirname, fname + '-' + str(n).zfill(4) + '.' + ext)  # 4桁ゼロ埋めの連番を付与
+                    fpath = os.path.join(dirname, fname + '-' + str(n+cnt_begin).zfill(min_zeros) + '.' + ext)  # 4桁ゼロ埋めの連番を付与
                     ren_table[k] = fpath  
                     n += 1;
 
