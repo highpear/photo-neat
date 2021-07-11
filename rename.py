@@ -47,6 +47,12 @@ def split_fpath(fpath):
     return dpath, fname, ext
 
 
+# 拡張子のみを置換
+def replace_ext(fpath, ext):
+    ext = ext.replace('.', '')  # ドットを削除
+    return os.path.splitext(fpath)[0] + '.' + ext
+
+
 # fpathと同名のAAEファイルが存在するか判定
 def has_aae(fpath):
     dpath, fname, _ = split_fpath(fpath)
