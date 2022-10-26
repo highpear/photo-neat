@@ -5,7 +5,6 @@ import argparse
 from classify import *
 from exifio import *
 from rename import *
-# import pyheif
 
 
 # dir以下の指定拡張子のファイルパスをリストで取得
@@ -55,7 +54,7 @@ def import_all(fpath_list, dest_dir):
         print('ERROR : directory [', dest_dir, '] already exists')
         sys.exit()
     else:
-        os.mkdir(dest_dir)                       # フォルダを新規作成
+        os.mkdir(dest_dir)                         # フォルダを新規作成
         print('DIR_CREATED : new directory [', dest_dir, '] was created')
 
     # コピーを実行
@@ -72,7 +71,7 @@ def import_all(fpath_list, dest_dir):
     return dest_dir  # (コピー先ディレクトリは時刻ごとに生成される為，コピー終了後にそのパスを返す)
 
 
-def show_fpath_list(fpath_list, include_dir_path=False):  # yieldを使用へ
+def show_fpath_list(fpath_list, include_dir_path=False):
     cnt = 0;
     ext_cnt = {}
     for fpath in fpath_list:
@@ -157,12 +156,12 @@ def show_file_info(fpath, use_mtime_for_birthtime=False):
     print('ctime', ctime)
 
 
-def main():
+def init_arg_parser():
 
     # parser setting
-    parser = argparse.ArgumentParser(description='画像や動画ファイルを分類したりリネームしたりするソフトです')
+    parser = argparse.ArgumentParser(description='画像や動画ファイルを分類・リネームするソフトです')
     parser.add_argument('arg1', help='実行する処理を指定します \nファイルの分類: clsby\nファイルのリネーム: renby')
-    parser.add_argument('arg2', help='処理に応じて必須項目を入力します')
+    parser.add_argument('arg2', help='第1引数で指定した処理に応じて必須項目を入力します')
     # 共通のオプションを設定
     parser.add_argument('--src', help='入力元のフォルダを指定します (デフォルトで現在のフォルダ)' )
     parser.add_argument('--dest', help='出力先のフォルダを指定します (デフォルトで現在のフォルダ)')
@@ -176,8 +175,14 @@ def main():
     parser.add_argument('--cntbegin', help='連番の開始番号を指定します')
     parser.add_argument('--renmethod', help='リネーム文字列の配置をカスタマイズします')
     parser.add_argument('--minzeros', help='連番生成時の0埋めの桁数を指定します')
+    
+    return parser
 
-    args = parser.parse_args()
+
+def main():
+
+    arg_parser = init_arg_parser()
+    args = arg_parser.parse_args()
 
     # デフォルト値の設定
     SRC_DIR = '.'                                # コピー元のディレクトリ
@@ -274,7 +279,7 @@ def main():
         rename_by_table(ren_table)
 
     else:
-        print('第1引数の値が不正です\n有効な引数は [clsby], [renby] のみです')
+        print('第1引数の値が不正です 有効な引数は [clsby], [renby] のみです')
         sys.exit()
 
     print('finished at main()')
