@@ -1,6 +1,6 @@
 # Photo Neat
 
-This python program will rename or classify all files such as ".jpg", ".png" and "heic" in specified directory.
+This python program renames or classifies all files such as ".JPG", ".PNG" and ".HEIC" in specified directory.
 
 ## Quick Start
 
