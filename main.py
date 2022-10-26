@@ -8,10 +8,10 @@ from rename import *
 
 
 # dir以下の指定拡張子のファイルパスをリストで取得
-def retrieve_img_path(dir, TARGET_EXT=[], recursive=True, includeAAE=False):
+def retrieve_img_path(dir, target_ext=[], recursive=True, includeAAE=False):
 
-    if includeAAE:                # 写真編集履歴ファイルを含める場合
-        TARGET_EXT.append('aae')
+    if includeAAE:                # iOSの写真編集履歴ファイルを含める場合
+        target_ext.append('aae')
     
     # 抽出したパスを格納するリスト
     fpath_list = []
@@ -30,11 +30,11 @@ def retrieve_img_path(dir, TARGET_EXT=[], recursive=True, includeAAE=False):
         # 拡張子を取得
         _, _, ext = split_fpath(file)
         ext = ext.lower()
-        if os.path.isfile(file) and ext in TARGET_EXT:  # ディレクトリ除外かつ対象拡張子のみ
+        if os.path.isfile(file) and ext in target_ext:  # ディレクトリ除外 対象拡張子のみ
             fpath_list.append(file)
 
     # 結果の出力
-    print(len(fpath_list), 'files were extracted from [', dir+'/', '] and sub folders')
+    print(f'合計{len(fpath_list)}のファイルが[{dir}]以下のフォルダから選択されています')
     
     return fpath_list
 
