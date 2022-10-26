@@ -34,7 +34,7 @@ def retrieve_img_path(dir, target_ext=[], recursive=True, includeAAE=False):
             fpath_list.append(file)
 
     # 結果の出力
-    print(f'合計{len(fpath_list)}のファイルが[{dir}]以下のフォルダから選択されています')
+    print(f'合計{len(fpath_list)}件のファイルが[{dir}]以下のフォルダから選択されています')
     
     return fpath_list
 
@@ -233,7 +233,6 @@ def main():
 
     # 対象ファイルのパスを取得
     fpath_list = retrieve_img_path(SRC_DIR, target_ext=TARGET_EXT, recursive=RECURSIVE)
-    print(f'{len(fpath_list)}件のファイルが見つかりました')
 
     # 入力元フォルダからファイルをコピー
     if SAFETY:
