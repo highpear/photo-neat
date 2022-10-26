@@ -250,7 +250,7 @@ def main():
     ######################
     if mode == 'clsby':
         print('指定されたフォルダ以下の全ファイルを分類します')
-        fpath_list = retrieve_img_path(SRC_DIR, TARGET_EXT=TARGET_EXT)
+        fpath_list = retrieve_img_path(SRC_DIR, target_ext=TARGET_EXT)
         cls_mode = args.arg2
 
         # 拡張子でフォルダ分け
@@ -287,7 +287,7 @@ def main():
     ##################
     elif mode == 'renby':  # リネーム処理
         print('指定されたフォルダ以下の全ファイルをリネームします')
-        fpath_list = retrieve_img_path(SRC_DIR, TARGET_EXT=TARGET_EXT)
+        fpath_list = retrieve_img_path(SRC_DIR, target_ext=TARGET_EXT)
 
         ren_method = ['REPLACEALL', '']  # リネーム方式はデフォルトで全置換
         if args.renmethod:
