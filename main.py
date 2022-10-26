@@ -47,6 +47,7 @@ def import_all(fpath_list, dest_parent_dir):
     dir_name = dt_now.split('.')[0]                # 小数点以下の秒を除去
     dir_name = dir_name.replace(' ', '-')          # 空白を除去
     dir_name = dir_name.replace(':', '')           # コロンを除去
+    dir_name = 'Original_' + dir_name
     dir_path = os.path.join(dest_parent_dir, dir_name)    # コピー先パスを生成
 
     if os.path.exists(dir_path):                   # コピー先フォルダが既に存在するかチェック
