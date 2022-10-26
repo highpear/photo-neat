@@ -39,36 +39,35 @@ def retrieve_img_path(dir, target_ext=[], recursive=True, includeAAE=False):
     return fpath_list
 
 
-# リスト内のファイルを全て指定のフォルダ以下の[Original_現在時刻/]フォルダへコピーする
-def import_all(fpath_list, dest_dir):
+# 指定ファイルを全て[Original_現在時刻/]フォルダへコピーする
+def import_all(fpath_list, dest_parent_dir):
 
-    # dest_dir以下に現在時刻でフォルダを生成する
+    # dest_parent_dir以下に現在時刻でフォルダを生成する
     dt_now = str(datetime.datetime.now())          # 現在時刻を文字列で取得 (ex. 2021-01-29 21:15:58.592992)
-
     dir_name = dt_now.split('.')[0]                # 小数点以下の秒を除去
     dir_name = dir_name.replace(' ', '-')          # 空白を除去
     dir_name = dir_name.replace(':', '')           # コロンを除去
-    dest_dir = os.path.join(dest_dir, dir_name)    # コピー先パスを生成
+    dir_path = os.path.join(dest_parent_dir, dir_name)    # コピー先パスを生成
 
-    if os.path.exists(dest_dir):                   # コピー先フォルダが既に存在するかチェック
-        print('ERROR : directory [', dest_dir, '] already exists')
+    if os.path.exists(dir_path):                   # コピー先フォルダが既に存在するかチェック
+        print(f'ERROR : directory [{dir_path}] already exists')
         sys.exit()
     else:
-        os.mkdir(dest_dir)                         # フォルダを新規作成
-        print('DIR_CREATED : new directory [', dest_dir, '] was created')
+        os.mkdir(dir_path)                         # フォルダを新規作成
+        print(f'DIR_CREATED : new directory [{dir_path}] was created')
 
     # コピーを実行
     cnt = 0
     for fpath in fpath_list:
         bname = os.path.basename(fpath)
-        dest_path = os.path.join(dest_dir, bname)
+        dest_path = os.path.join(dir_path, bname)
         shutil.copy2(fpath, dest_path)
-        print('FILE_COPIED : file [', fpath, '] was copied to [', dest_path, ']')
+        print(f'FILE_COPIED : file [{fpath}] was copied to [{dest_path}]')
         cnt += 1
 
-    print('{} files were copied to [ {} ]'.format(cnt, dest_dir))
+    print(f'{cnt} files were copied to [{dir_path}]')
 
-    return dest_dir  # (コピー先ディレクトリは時刻ごとに生成される為，コピー終了後にそのパスを返す)
+    return dir_path  # コピー終了後にフォルダのパスを返す)
 
 
 def show_fpath_list(fpath_list, include_dir_path=False):
@@ -238,7 +237,7 @@ def main():
         sys.exit()
 
     # 対象ファイルのパスを取得
-    fpath_list = retrieve_img_path(SRC_DIR, TARGET_EXT=TARGET_EXT, recursive=RECURSIVE)
+    fpath_list = retrieve_img_path(SRC_DIR, target_ext=TARGET_EXT, recursive=RECURSIVE)
     print(f'{len(fpath_list)}件のファイルが見つかりました')
 
     # 入力元フォルダからファイルをコピー
