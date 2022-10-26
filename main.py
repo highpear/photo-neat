@@ -237,7 +237,11 @@ def main():
     # 入力元フォルダからファイルをコピー
     if SAFETY:
         print('取得したファイルを一時フォルダにコピーします')
-        SRC_DIR = import_all(fpath_list, DEST_DIR)  # DEST_DIR以下にコピー
+        if input('続行? y or n >>') == 'y':
+            SRC_DIR = import_all(fpath_list, DEST_DIR)
+        else:
+            print('終了します')
+            sys.exit()
 
     mode = args.arg1
 
