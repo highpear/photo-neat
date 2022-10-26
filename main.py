@@ -34,7 +34,7 @@ def get_all_files(dir, TARGET_EXT=[], recursive=True, includeAAE=False):
             fpath_list.append(file)
 
     # 結果の出力
-    print(len(fpath_list), 'files were extracted from [', dir+'/', '] and below')
+    print(len(fpath_list), 'files were extracted from [', dir+'/', '] and sub folders')
     
     return fpath_list
 
@@ -179,38 +179,53 @@ def init_arg_parser():
     return parser
 
 
+# デフォルト値の設定
+SRC_DIR = '.'                                # コピー元のディレクトリ
+DEST_DIR = '.'                               # 処理後のファイルの保存先ディレクトリ
+TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']  # 処理の対象とする拡張子
+RECURSIVE = True                             # ファイル検索の際，サブフォルダ以下を含める
+SAFETY = True                                # SRC_DIR から一度コピーして処理を実行
+ALTNAME = 'Unknown-'                         # 情報不明画像のデフォルトファイル名
+CNT_BEGIN = 1                                # 重複ファイルのカウント開始値
+MIN_ZEROS = 4                                # カウント時に0埋めする桁
+
+
+def set_options_by_args(args):
+
+    if args.src:
+        global SRC_DIR
+        SRC_DIR = args.src
+    if args.dest:
+        global DEST_DIR
+        DEST_DIR = args.dest
+    if args.target:
+        global TARGET_EXT
+        TARGET_EXT = args.target.split(' ')
+    if args.recursive != None:
+        global RECURSIVE
+        RECURSIVE = bool(int(args.recursive))
+    if args.safety != None:
+        global SAFETY
+        SAFETY = bool(int(args.safety))
+    if args.altname:
+        global ALTNAME
+        ALTNAME = args.altname
+    if args.cntbegin:
+        global CNT_BEGIN
+        CNT_BEGIN = args.cntbegin
+    if  args.minzeros:
+        global MIN_ZEROS
+        MIN_ZEROS = args.minzeros
+
+
 def main():
+
+    global SRC_DIR, DEST_DIR, TARGET_EXT, RECURSIVE, SAFETY, ALTNAME, CNT_BEGIN, MIN_ZEROS
 
     arg_parser = init_arg_parser()
     args = arg_parser.parse_args()
 
-    # デフォルト値の設定
-    SRC_DIR = '.'                                # コピー元のディレクトリ
-    DEST_DIR = '.'                               # 処理後のファイルの保存先ディレクトリ
-    TARGET_EXT = ['jpg', 'jpeg', 'png', 'heic']  # 処理の対象とする拡張子
-    RECURSIVE = True                             # ファイル検索の際，サブフォルダ以下を含める
-    SAFETY = True                                # SRC_DIR から一度コピーして処理を実行
-    ALTNAME = 'Unknown-'                         # 情報不明画像のデフォルトファイル名
-    CNT_BEGIN = 1                                # 重複ファイルのカウント開始値
-    MIN_ZEROS = 4                                # カウント時に0埋めする桁
-
-    # オプションに応じてデフォルト値を更新
-    if args.src:
-        SRC_DIR = args.src
-    if args.dest:
-        DEST_DIR = args.dest
-    if args.target:
-        TARGET_EXT = args.target.split(' ')
-    if args.recursive != None:
-        RECURSIVE = bool(int(args.recursive))
-    if args.safety != None:
-        SAFETY = bool(int(args.safety))
-    if args.altname:
-        ALTNAME = args.altname
-    if args.cntbegin:
-        CNT_BEGIN = args.cntbegin
-    if  args.minzeros:
-        MIN_ZEROS = args.minzeros
+    set_options_by_args(args)
 
     # パスのチェック
     if not os.path.exists(SRC_DIR):
