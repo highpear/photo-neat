@@ -222,12 +222,14 @@ def main():
 
     global SRC_DIR, DEST_DIR, TARGET_EXT, RECURSIVE, SAFETY, ALTNAME, CNT_BEGIN, MIN_ZEROS
 
+    # 引数のパーサーを初期化
     arg_parser = init_arg_parser()
     args = arg_parser.parse_args()
 
+    # 引数に応じてオプションを設定
     set_options_by_args(args)
 
-    # パスのチェック
+    # src, dest のパスをチェック
     if not os.path.exists(SRC_DIR):
         print('入力元のディレクトリが存在しません')
         sys.exit()
@@ -235,46 +237,62 @@ def main():
         print('出力先のディレクトリが存在しません')
         sys.exit()
 
-    # 対象のファイルパスを取得
+    # 対象ファイルのパスを取得
     fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT, recursive=RECURSIVE)
     print(f'{len(fpath_list)}件のファイルが見つかりました')
 
     # 入力元フォルダからファイルをコピー
     if SAFETY:
-        print('一時フォルダにコピーします')
+        print('取得したファイルを一時フォルダにコピーします')
         SRC_DIR = import_all(fpath_list, DEST_DIR)  # DEST_DIR以下にコピー
 
-    # 実行する処理ごとに分岐
     mode = args.arg1
-    if mode == 'clsby':   # 分類処理
-        print('指定された全ファイルを分類します')
+
+    ######################
+    # 画像のフォルダ分け #
+    ######################
+    if mode == 'clsby':
+        print('指定されたフォルダ以下の全ファイルを分類します')
         fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT)
-        # 分類オプションで分岐
         cls_mode = args.arg2
-        if cls_mode == 'ext':        # 拡張子でフォルダ分け
+
+        # 拡張子でフォルダ分け
+        if cls_mode == 'ext':
             cls_by_ext(fpath_list, DEST_DIR)
-        elif cls_mode == 'year':     # 撮影年でフォルダ分け
+        
+        # 撮影年でフォルダ分け
+        elif cls_mode == 'year':
             cls_by_dt_original(fpath_list, DEST_DIR, 'year')
-        elif cls_mode == 'month':    # 撮影月でフォルダ分け
+
+        # 撮影月でフォルダ分け
+        elif cls_mode == 'month':
             cls_by_dt_original(fpath_list, DEST_DIR, 'month')
-        elif cls_mode == 'day':      # 撮影日でフォルダ分け
+
+        # 撮影日でフォルダ分け
+        elif cls_mode == 'day':
             cls_by_dt_original(fpath_list, DEST_DIR, 'day')
-        elif cls_mode == 'exiftag':  # EXIFタグ名を直接指定してフォルダ分け (現在非推奨)
+
+        # EXIFタグ名を指定してフォルダ分け (現在非推奨)
+        elif cls_mode == 'exiftag':
             if args.exiftagname:
                 tag_name = args.exiftagname
             else:
-                print('exifタグの名称を指定してください')
+                print('EXIFタグを指定してください')
                 sys.exit()
             cls_by_exif(fpath_list, DEST_DIR, tag_name)
+
         else:
             print('有効な分類モードを入力してください')
             sys.exit()
 
+    ##################
+    # 画像のリネーム #
+    ##################
     elif mode == 'renby':  # リネーム処理
-        print('指定された全ファイルをリネームします')
+        print('指定されたフォルダ以下の全ファイルをリネームします')
         fpath_list = get_all_files(SRC_DIR, TARGET_EXT=TARGET_EXT)
 
-        ren_method = ['REPLACEALL', '']  # リネーム方式はデフォルトでファイル名を全置換
+        ren_method = ['REPLACEALL', '']  # リネーム方式はデフォルトで全置換
         if args.renmethod:
             ren_method = args.renmethod.split('=')
 
@@ -294,7 +312,7 @@ def main():
         rename_by_table(ren_table)
 
     else:
-        print('第1引数の値が不正です 有効な引数は [clsby], [renby] のみです')
+        print('第1引数の値が不正です。有効な引数は [clsby], [renby] のみ')
         sys.exit()
 
     print('finished at main()')
