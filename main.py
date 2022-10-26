@@ -192,29 +192,23 @@ MIN_ZEROS = 4                                # カウント時に0埋めする�
 
 def set_options_by_args(args):
 
+    global SRC_DIR, DEST_DIR, TARGET_EXT, RECURSIVE, SAFETY, ALTNAME, CNT_BEGIN, MIN_ZEROS
+
     if args.src:
-        global SRC_DIR
         SRC_DIR = args.src
     if args.dest:
-        global DEST_DIR
         DEST_DIR = args.dest
     if args.target:
-        global TARGET_EXT
         TARGET_EXT = args.target.split(' ')
     if args.recursive != None:
-        global RECURSIVE
         RECURSIVE = bool(int(args.recursive))
     if args.safety != None:
-        global SAFETY
         SAFETY = bool(int(args.safety))
     if args.altname:
-        global ALTNAME
         ALTNAME = args.altname
     if args.cntbegin:
-        global CNT_BEGIN
         CNT_BEGIN = args.cntbegin
     if  args.minzeros:
-        global MIN_ZEROS
         MIN_ZEROS = args.minzeros
 
 
